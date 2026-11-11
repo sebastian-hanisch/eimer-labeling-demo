@@ -1,7 +1,6 @@
 # Eimer im Labeling: wie viel sparen sie wirklich? – Streamlit-Demo
 
-<!-- Nach dem Deploy hier direkt den Live-Link einsetzen (Leerzeile davor und danach):
-**[→ Demo live ausprobieren](https://sebastianhanisch-eimer-labeling-demo.streamlit.app/)** -->
+**[→ Demo live ausprobieren](https://sebastianhanisch-eimer-labeling-demo.streamlit.app/)**
 
 Demo der Linie „Ressourcenwege und Spaltenerzeugung“ in der „Konzepte“-Reihe für die Website „Sebastian Hanisch – Operations Research und Machine Learning“. Das **Label-Verfahren** sucht den Weg mit den kleinsten **reduzierten Kosten**
 (Weglänge minus die Dualpreise der besuchten Kunden), mit Zeitfenstern und Last; es ist das Preisproblem der Spaltenerzeugung. Jeder Teilweg ist ein **Label**, und jedes neue Label wird gegen die lebenden Labels seines Kunden auf **Dominanz** geprüft.
