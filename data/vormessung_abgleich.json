@@ -1,0 +1,10 @@
+{
+ "hinweis": "Abgleich der neu gerechneten Läufe mit den Rohausgaben der Vormessung (out_v10_mess_*.txt) beim Bau der Daten; nicht Teil der Testsuite.",
+ "zeilen_neu": 4480,
+ "zeilen_gleich": 4480,
+ "zeilen_abweichend": 0,
+ "zeilen_ohne_rohzeile": 0,
+ "dualpreise_verglichen": 320,
+ "dualpreise_groesste_abweichung": 0.0,
+ "quelle": "tools/bands_bauen.py bauen, Rohausgaben out_v10_mess_*.txt und v9_duale_*.json"
+}
