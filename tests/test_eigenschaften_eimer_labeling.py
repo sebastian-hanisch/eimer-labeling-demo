@@ -1,12 +1,12 @@
 """Eigenschaftstests (ORACLE-PLAYBOOK §5.2): Aussagen über das Verfahren, die ohne bekanntes Ergebnis prüfbar sind. Je Eigenschaft 20 bis 30 Instanzen mit festem Zufalls-Seed.
 
-1. Eimer ändern nie die Menge der lebenden Labels, die Zahl der erzeugten und der gestrichenen Labels und die Liste der Routen.
-2. cmp2 sieht nur lebende Labels an, die auch ohne Eimer angesehen würden: nie mehr als ohne Eimer. cmp1 bricht beim ersten dominierenden Label ab; mit Eimern ist die Reihenfolge eine andere,
+1. Buckets ändern nie die Menge der lebenden Labels, die Zahl der erzeugten und der gestrichenen Labels und die Liste der Routen.
+2. cmp2 sieht nur lebende Labels an, die auch ohne Buckets angesehen würden: nie mehr als ohne Buckets. cmp1 bricht beim ersten dominierenden Label ab; mit Buckets ist die Reihenfolge eine andere,
    also gilt nur die Obergrenze „jedes lebende Label des Kunden“ (und das ist keine Ersparnis-Aussage).
-3. Eine Eimerbreite über dem Horizont (Zeit) oder über der Kapazität (Last) ist ein einziger Eimer: dieselben Zähler wie ohne Eimer.
-4. Alle Zeiten, Kosten und die Zeit-Eimerbreite mit 2 multipliziert (Potenz von 2, exakt in Fließkomma): dieselben Zähler.
+3. Eine Bucket-Breite über dem Horizont (Zeit) oder über der Kapazität (Last) ist ein einziger Bucket: dieselben Zähler wie ohne Buckets.
+4. Alle Zeiten, Kosten und die Zeit-Bucket-Breite mit 2 multipliziert (Potenz von 2, exakt in Fließkomma): dieselben Zähler.
 5. Umnummerieren der Kunden ändert Ergebnis, Zahl der erzeugten und gestrichenen Labels und die Menge der lebenden Labels (bis auf die Umbenennung), nicht aber notwendig die Zahl der Vergleiche
-   (die Reihenfolge der Labels im Eimer hängt von der Reihenfolge der Erzeugung ab, und cmp1 bricht beim ersten Treffer ab).
+   (die Reihenfolge der Labels im Bucket hängt von der Reihenfolge der Erzeugung ab, und cmp1 bricht beim ersten Treffer ab).
 6. Gleiche Eingabe, gleiche Zähler, auch in einem zweiten Prozess mit anderem Hash-Zufall (PYTHONHASHSEED)."""
 
 import json

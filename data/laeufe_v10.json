@@ -1,5 +1,5 @@
 {
-"hinweis": "Je Lauf (Instanz x Dualpreise einer Runde) die 14 Eimer-Einstellungen 'Zeitbreite,Lastbreite' (0 = kein Eimer): [erzeugte Labels, gestrichene Labels, Vergleiche cmp1, Vergleiche cmp2, Eimerschritte, Ergebnis gleich dem Lauf ohne Eimer, Sekunden (nur Information, parallele Läufe)]. n = 30, Gedächtnis k = 5.",
+"hinweis": "Je Lauf (Instanz x Dualpreise einer Runde) die 14 Buckets-Einstellungen 'Zeitbreite,Lastbreite' (0 = kein Bucket): [erzeugte Labels, gestrichene Labels, Vergleiche cmp1, Vergleiche cmp2, Bucket-Schritte, Ergebnis gleich dem Lauf ohne Buckets, Sekunden (nur Information, parallele Läufe)]. n = 30, Gedächtnis k = 5.",
 "laeufe": [
 {
 "typ": "cluster",

@@ -10,7 +10,7 @@ from eml_scenario import HAND_DUALS, hand_instance, make_instance, ng_masks
 from ref_labeling import plain, ref_price
 
 CONFIGS = [(None, None), (10, None), (None, 3), (10, 3), (5, None), (5, 3)]
-# je Einstellung (cmp1, cmp2, Eimerschritte) bei exakten Eimergrenzen: Handrechnung, 35 erzeugte, 11 gestrichene, 24 lebende Labels in allen sechs Fällen
+# je Einstellung (cmp1, cmp2, Bucket-Schritte) bei exakten Bucket-Grenzen: Handrechnung, 35 erzeugte, 11 gestrichene, 24 lebende Labels in allen sechs Fällen
 HAND_COUNTS = {
     (None, None): (57, 45, 57),
     (10, None): (57, 28, 174),
@@ -33,7 +33,7 @@ def test_the_hand_table_in_conftest_equals_the_scenario_module(hand):
 
 def test_bucket_count_and_index():
     assert A.bucket_count(40, 10) == 5 and A.bucket_count(9, 3) == 4 and A.bucket_count(40, None) == 1
-    assert [A.bucket_of(t, 10, 5) for t in (0, 9.99, 10, 19, 20, 39, 40, 99)] == [0, 0, 1, 1, 2, 3, 4, 4]   # Eimer = Zeit // 10, am letzten Eimer abgeschnitten
+    assert [A.bucket_of(t, 10, 5) for t in (0, 9.99, 10, 19, 20, 39, 40, 99)] == [0, 0, 1, 1, 2, 3, 4, 4]   # Buckets = Zeit // 10, am letzten Bucket abgeschnitten
     assert [A.bucket_of(q, 3, 4) for q in (0, 2, 3, 5, 6, 8, 9)] == [0, 0, 1, 1, 2, 2, 3]
     assert A.bucket_of(12345, None, 1) == 0
 
@@ -92,7 +92,7 @@ def test_hand_totals_as_sums(hand):
     assert z10.comparisons == 57 + 28 == 85 and z10.comparisons / base.comparisons == pytest.approx(85 / 102)
     both = A.price(inst, pi, 6, 10, 3, rand=0.0)
     assert both.comparisons == 52 + 8 == 60
-    # Zeit-Eimer sparen hier nur cmp2, Last-Eimer auch cmp1
+    # Zeit-Buckets sparen hier nur cmp2, Last-Buckets auch cmp1
     assert z10.cmp1 == base.cmp1 and z10.cmp2 < base.cmp2
     last = A.price(inst, pi, 6, None, 3, rand=0.0)
     assert last.cmp1 < base.cmp1 and last.cmp2 < base.cmp2
@@ -108,16 +108,16 @@ def test_hand_weighted_effort_with_weight_one_tenth(hand):
 
 
 def test_hand_single_decisions_zeit10_last3(hand):
-    """Vier von Hand nachgerechnete Einzelfälle: Label Nr. 20 (3 / 0), 32 (5 / 0), 34 (3 / 1) und 15 (1 / 1) (cmp1 / cmp2 mit Eimern Zeit 10 x Last 3)."""
+    """Vier von Hand nachgerechnete Einzelfälle: Label Nr. 20 (3 / 0), 32 (5 / 0), 34 (3 / 1) und 15 (1 / 1) (cmp1 / cmp2 mit Buckets Zeit 10 x Last 3)."""
     inst, pi = hand
     with_b = {e["nr"]: e for e in A.price(inst, pi, 6, 10, 3, rand=0.0, trace=True).events}
     without = {e["nr"]: e for e in A.price(inst, pi, 6, None, None, rand=0.0, trace=True).events}
     for nr, (b1, b2, w1, w2) in {20: (3, 3, 3, 0), 32: (5, 5, 5, 0), 34: (6, 6, 3, 1), 15: (2, 2, 1, 1)}.items():
         assert (len(without[nr]["ex1"]), len(without[nr]["ex2"]), len(with_b[nr]["ex1"]), len(with_b[nr]["ex2"])) == (b1, b2, w1, w2), nr
-    # F20: Kunde 3, Zeit 23, Last 8, Eimer (2, 2); alle drei lebenden Labels haben Last-Eimer 0 oder 1 < 2: cmp2 überspringt sie (ein Label mit kleinerer Last wird nicht dominiert)
+    # F20: Kunde 3, Zeit 23, Last 8, Buckets (2, 2); alle drei lebenden Labels haben Last-Bucket 0 oder 1 < 2: cmp2 überspringt sie (ein Label mit kleinerer Last wird nicht dominiert)
     e = with_b[20]
     assert (e["node"], e["time"], e["load"], e["bucket"]) == (3, 23, 8, (2, 2)) and len(e["live_before"]) == 3
-    # F32: Kunde 1, Zeit 32 (Eimer 3); die fünf lebenden Labels haben Zeit <= 24 (Eimer 2 < 3)
+    # F32: Kunde 1, Zeit 32 (Bucket 3); die fünf lebenden Labels haben Zeit <= 24 (Bucket 2 < 3)
     e = with_b[32]
     assert (e["node"], e["time"], e["bucket"][0]) == (1, 32, 3) and len(e["live_before"]) == 5
 
@@ -132,7 +132,7 @@ def test_hand_same_labels_in_every_configuration(hand):
 
 
 def test_hand_rounding_margin_of_the_measurement_version(hand):
-    """E12.5: Mit dem Sicherheitsrand der Messreihen (rand = 1e-9) sieht cmp2 bei ganzzahligen Zeiten auf einer Eimergrenze einen Eimer mehr an; Ergebnis und cmp1 bleiben."""
+    """E12.5: Mit dem Sicherheitsrand der Messreihen (rand = 1e-9) sieht cmp2 bei ganzzahligen Zeiten auf einer Bucket-Grenze einen Bucket mehr an; Ergebnis und cmp1 bleiben."""
     inst, pi = hand
     exact = A.price(inst, pi, 6, 10, None, rand=0.0)
     safe = A.price(inst, pi, 6, 10, None, rand=A.EPS)
@@ -142,7 +142,7 @@ def test_hand_rounding_margin_of_the_measurement_version(hand):
     assert (both_exact.cmp2, both_safe.cmp2, both_safe.steps) == (8, 12, 479)
     base = A.price(inst, pi, 6, None, None, rand=A.EPS)
     for r in (safe, both_safe):
-        assert r.comparisons <= base.comparisons          # nie mehr als ohne Eimer
+        assert r.comparisons <= base.comparisons          # nie mehr als ohne Buckets
 
 
 def test_default_rand_is_the_measurement_version(hand):
@@ -173,8 +173,8 @@ def test_live_set_and_routes_do_not_depend_on_the_bucket_widths():
         for wt, wq in [(1, None), (10, None), (40, None), (None, 5), (10, 5), (5, 5)]:
             r = A.price(inst, pi, 5, wt, wq, max_routes=10 ** 6)
             assert (r.live, r.routes, r.generated, r.dominated) == (base.live, base.routes, base.generated, base.dominated), (seed, wt, wq)
-            # cmp2 hat keinen Abbruch: die angesehenen Labels sind eine Teilmenge der lebenden, also nie mehr als ohne Eimer. cmp1 bricht beim ersten dominierenden Label ab; mit Eimern
-            # ist die Reihenfolge eine andere (nach Eimern statt nach Einfügen), also ist nur die Obergrenze „alle lebenden Labels“ sicher (Einzelfälle: 232 gegen 231 Vergleiche).
+            # cmp2 hat keinen Abbruch: die angesehenen Labels sind eine Teilmenge der lebenden, also nie mehr als ohne Buckets. cmp1 bricht beim ersten dominierenden Label ab; mit Buckets
+            # ist die Reihenfolge eine andere (nach Buckets statt nach Einfügen), also ist nur die Obergrenze „alle lebenden Labels“ sicher (Einzelfälle: 232 gegen 231 Vergleiche).
             assert r.cmp2 <= base.cmp2 and r.cmp1 <= full_scan
 
 

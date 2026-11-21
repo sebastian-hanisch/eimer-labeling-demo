@@ -1,11 +1,11 @@
-"""Orakel-Test eimer-labeling-demo: der Kern (Bitmasken, Heap, Eimer als Dictionary mit sortierter Schlüsselliste) gegen zwei andere Rechenwege.
+"""Orakel-Test eimer-labeling-demo: der Kern (Bitmasken, Heap, Buckets als Dictionary mit sortierter Schlüsselliste) gegen zwei andere Rechenwege.
 
-1. `ref_labeling.ref_price`: dasselbe Verfahren in Mengen und Listen, die Eimerkandidaten je neuem Label als gefilterte, sortierte Liste. Verglichen werden erzeugte und gestrichene Labels,
-   cmp1, cmp2, Eimerschritte, die Menge der lebenden Labels und die negativen Routen, in jeder Eimer-Einstellung, bei exakten Grenzen und mit dem Sicherheitsrand der Messreihen.
+1. `ref_labeling.ref_price`: dasselbe Verfahren in Mengen und Listen, die Bucket-Kandidaten je neuem Label als gefilterte, sortierte Liste. Verglichen werden erzeugte und gestrichene Labels,
+   cmp1, cmp2, Bucket-Schritte, die Menge der lebenden Labels und die negativen Routen, in jeder Bucket-Einstellung, bei exakten Grenzen und mit dem Sicherheitsrand der Messreihen.
 2. Aufzählung aller zulässigen elementaren Routen (`ref_labeling.enum_routes`, keine Labels): jede vom Labeling gemeldete Route steht in ihr mit denselben reduzierten Kosten, und die beste Route
    des Labelings (k = n) hat die kleinsten reduzierten Kosten aller Routen.
 Das Handbeispiel steht als Handrechnung in `test_algorithm.py`; hier wird es zusätzlich gegen die Aufzählung (39 zulässige Routen) geprüft.
-Die große Fassung lief beim Bau im Scratch-Lauf, nicht im Repo (DEMO-PLAYBOOK §12): 300 Zufallsinstanzen (4 bis 9 Kunden, Kapazität 20 bis 120, Gedächtnis n, 3 und 2) × 14 Einstellungen × zwei Eimerränder = 8 400 Vergleiche, 0 Abweichungen;
+Die große Fassung lief beim Bau im Scratch-Lauf, nicht im Repo (DEMO-PLAYBOOK §12): 300 Zufallsinstanzen (4 bis 9 Kunden, Kapazität 20 bis 120, Gedächtnis n, 3 und 2) × 14 Einstellungen × zwei Bucket-Ränder = 8 400 Vergleiche, 0 Abweichungen;
 bei Gedächtnis n zusätzlich die beste Route gegen die Aufzählung."""
 
 import random

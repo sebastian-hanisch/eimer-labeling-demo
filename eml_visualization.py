@@ -20,7 +20,7 @@ def _layout(fig, height, title=None, legend_bottom=False):
 
 
 def _zeit_label(w: int) -> str:
-    return "ohne Eimer" if w == 0 else f"Zeit {w}"
+    return "ohne Buckets" if w == 0 else f"Zeit {w}"
 
 
 def build_hand_map(inst, route, depot_label="Depot") -> go.Figure:
@@ -49,19 +49,19 @@ def build_hand_map(inst, route, depot_label="Depot") -> go.Figure:
 
 
 def build_sweep_chart(runs: dict) -> go.Figure:
-    """Experiment 2: Vergleiche (Anteil an denen ohne Eimer) und angesehene Eimer je Zeit-Breite (grob nach fein; 'ohne Eimer' links); dazu Last 5 und Last 10 als Punkte."""
+    """Experiment 2: Vergleiche (Anteil an denen ohne Buckets) und angesehene Buckets je Zeit-Breite (grob nach fein; 'ohne Buckets' links); dazu Last 5 und Last 10 als Punkte."""
     order = [w for w in C.SWEEP_WT if (w, 0) in runs]
     base = runs[(0, 0)].comparisons
     xs = [_zeit_label(w) for w in order]
-    fig = make_subplots(rows=2, cols=1, shared_xaxes=False, vertical_spacing=0.18, subplot_titles=("Vergleiche (Anteil an den Vergleichen ohne Eimer)", "angesehene Eimer (nach Formel gezählt)"))
-    fig.add_trace(go.Scatter(x=xs, y=[runs[(w, 0)].comparisons / base for w in order], mode="lines+markers", name="Zeit-Eimer", line=dict(color=C.COLOR_LINE)), row=1, col=1)
+    fig = make_subplots(rows=2, cols=1, shared_xaxes=False, vertical_spacing=0.18, subplot_titles=("Vergleiche (Anteil an den Vergleichen ohne Buckets)", "angesehene Buckets (nach Formel gezählt)"))
+    fig.add_trace(go.Scatter(x=xs, y=[runs[(w, 0)].comparisons / base for w in order], mode="lines+markers", name="Zeit-Buckets", line=dict(color=C.COLOR_LINE)), row=1, col=1)
     lasts = [(q, runs[(0, q)]) for q in (5, 10) if (0, q) in runs]
     if lasts:
-        fig.add_trace(go.Scatter(x=[f"Last {q}" for q, _ in lasts], y=[r.comparisons / base for _, r in lasts], mode="markers", name="Last-Eimer",
+        fig.add_trace(go.Scatter(x=[f"Last {q}" for q, _ in lasts], y=[r.comparisons / base for _, r in lasts], mode="markers", name="Last-Buckets",
                                  marker=dict(color=C.COLOR_LINE2, size=11, symbol="diamond")), row=1, col=1)
-    fig.add_trace(go.Bar(x=xs, y=[runs[(w, 0)].steps for w in order], name="Eimerschritte (Zeit)", marker_color=C.COLOR_LINE, showlegend=False), row=2, col=1)
+    fig.add_trace(go.Bar(x=xs, y=[runs[(w, 0)].steps for w in order], name="Bucket-Schritte (Zeit)", marker_color=C.COLOR_LINE, showlegend=False), row=2, col=1)
     if lasts:
-        fig.add_trace(go.Bar(x=[f"Last {q}" for q, _ in lasts], y=[r.steps for _, r in lasts], name="Eimerschritte (Last)", marker_color=C.COLOR_LINE2, showlegend=False), row=2, col=1)
+        fig.add_trace(go.Bar(x=[f"Last {q}" for q, _ in lasts], y=[r.steps for _, r in lasts], name="Bucket-Schritte (Last)", marker_color=C.COLOR_LINE2, showlegend=False), row=2, col=1)
     top = max(max(r.steps for r in runs.values()), 1)
     fig.update_yaxes(range=[0, 1.1], row=1, col=1)
     fig.update_yaxes(range=[0, top * 1.12], row=2, col=1)
@@ -71,7 +71,7 @@ def build_sweep_chart(runs: dict) -> go.Figure:
 
 
 def build_optimum_chart(runs: dict, weights=C.BAND_WEIGHTS) -> go.Figure | None:
-    """Experiment 3: Aufwand (Vergleiche + Gewicht x Eimerschritte) je Zeit-Breite im Verhältnis zum Aufwand ohne Eimer, für jedes Gewicht; logarithmische Achse (alle Werte > 0).
+    """Experiment 3: Aufwand (Vergleiche + Gewicht x Bucket-Schritte) je Zeit-Breite im Verhältnis zum Aufwand ohne Buckets, für jedes Gewicht; logarithmische Achse (alle Werte > 0).
     Gibt None zurück, wenn der Bezug 0 ist (nichts zu zeigen)."""
     order = [w for w in C.SWEEP_WT if (w, 0) in runs]
     fig = go.Figure()
@@ -86,7 +86,7 @@ def build_optimum_chart(runs: dict, weights=C.BAND_WEIGHTS) -> go.Figure | None:
         fig.add_trace(go.Scatter(x=[_zeit_label(w) for w in order], y=ys, mode="lines+markers", name=f"Gewicht {ev.fmt_dec(g, 1)}", line=dict(color=col)))
     lo = min(min(values), 1.0)
     hi = max(max(values), 1.0)
-    fig.update_yaxes(type="log", range=[math.log10(lo * 0.9), math.log10(hi * 1.15)], title="Aufwand / Aufwand ohne Eimer", tickvals=[v for v in (0.5, 1, 2, 5, 10, 20, 50, 100) if lo * 0.9 <= v <= hi * 1.15],
+    fig.update_yaxes(type="log", range=[math.log10(lo * 0.9), math.log10(hi * 1.15)], title="Aufwand / Aufwand ohne Buckets", tickvals=[v for v in (0.5, 1, 2, 5, 10, 20, 50, 100) if lo * 0.9 <= v <= hi * 1.15],
                      ticktext=[ev.fmt_dec(v, 1).replace(",0", "") if v >= 1 else ev.fmt_dec(v, 1) for v in (0.5, 1, 2, 5, 10, 20, 50, 100) if lo * 0.9 <= v <= hi * 1.15])
     fig.add_hline(y=1.0, line_dash="dot", line_color="rgba(120,120,120,0.8)")
     fig.update_xaxes(categoryorder="array", categoryarray=[_zeit_label(w) for w in order])
@@ -123,7 +123,7 @@ def build_split_chart(runs: dict, configs=C.SPLIT_CONFIGS) -> go.Figure:
 
 
 def build_hand_split_chart(rows: list) -> go.Figure:
-    """Experiment 4, Handbeispiel: cmp1 und cmp2 je Einstellung (Zeit-Eimer 10, Last-Eimer 3, beide, ohne)."""
+    """Experiment 4, Handbeispiel: cmp1 und cmp2 je Einstellung (Zeit-Bucket 10, Last-Bucket 3, beide, ohne)."""
     sel = [r for r in rows if (r["wt"], r["wq"]) in ((0, 0), (10, 0), (0, 3), (10, 3))]
     names = [r["name"] for r in sel]
     fig = go.Figure()
@@ -136,7 +136,7 @@ def build_hand_split_chart(rows: list) -> go.Figure:
 
 
 def build_band_chart(rows: list) -> go.Figure:
-    """Experiment 5: je Einstellung Median (Balken), Mittel (Raute) und Maximum (Strich) des Verhältnisses 'Vergleiche mit Eimern / ohne Eimer' über die Läufe einer Zelle."""
+    """Experiment 5: je Einstellung Median (Balken), Mittel (Raute) und Maximum (Strich) des Verhältnisses 'Vergleiche mit Buckets / ohne Buckets' über die Läufe einer Zelle."""
     sel = [r for r in rows if r["cfg"] != (0, 0)]
     names = [r["name"] for r in sel]
     fig = go.Figure()
@@ -144,6 +144,6 @@ def build_band_chart(rows: list) -> go.Figure:
     fig.add_trace(go.Scatter(y=names, x=[r["mean"] for r in sel], mode="markers", name="Mittel", marker=dict(symbol="diamond", size=9, color=C.COLOR_LINE2)))
     fig.add_trace(go.Scatter(y=names, x=[r["max"] for r in sel], mode="markers", name="Maximum", marker=dict(symbol="line-ns-open", size=14, color=C.COLOR_BAD, line=dict(width=2))))
     top = max([1.0] + [r["max"] for r in sel])
-    fig.update_xaxes(range=[0, top * 1.05], title="Vergleiche mit Eimern / Vergleiche ohne Eimer")
+    fig.update_xaxes(range=[0, top * 1.05], title="Vergleiche mit Buckets / Vergleiche ohne Buckets")
     fig.update_yaxes(categoryorder="array", categoryarray=names[::-1])
     return _layout(fig, 120 + 28 * len(sel))

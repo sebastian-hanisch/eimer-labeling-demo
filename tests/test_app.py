@@ -38,7 +38,7 @@ def _widget(at, kind, key):
 
 def test_app_loads_without_exception():
     at = _fresh_app()
-    assert at.title[0].value.endswith("Eimer im Labeling: wie viel sparen sie wirklich?")
+    assert at.title[0].value.endswith("Buckets im Labeling: wie viel sparen sie wirklich?")
 
 
 def test_the_buttons_are_the_presets_and_the_new_instance_button():
@@ -140,7 +140,7 @@ def test_settings_in_the_url_match_the_setting_specs():
 def test_sections_are_present_by_title_not_by_index():
     at = _fresh_app()
     expanders = {e.label: e for e in at.expander}
-    assert "So funktionieren Eimer" in expanders and expanders["So funktionieren Eimer"].proto.expanded
+    assert "So funktionieren Buckets" in expanders and expanders["So funktionieren Buckets"].proto.expanded
     assert "📐 Mathematische Formulierung" in expanders and "⚠️ Annahmen, Grenzen und bekannte Probleme" in expanders
     subheaders = [s.value for s in at.subheader]
     for number in range(1, 6):
@@ -175,26 +175,26 @@ def test_every_preset_shows_its_expected_verdict_lines(name):
     p = C.PRESETS[name]
     shown = _texts(at, kind)
     assert any(piece in t for t in shown), (name, shown)
-    assert any(t.startswith("Dieselbe Menge lebender Labels wie ohne Eimer: ja") for t in _texts(at, "success"))
+    assert any(t.startswith("Dieselbe Menge lebender Labels wie ohne Buckets: ja") for t in _texts(at, "success"))
     assert any("dieselben 35 erzeugten Labels" in t and t.startswith(ev.config_name(p["hand_wt"], p["hand_wq"])) for t in _texts(at, "success")), name
 
 
 def test_the_label_table_checkbox_shows_34_labels_and_the_hand_overview_has_six_rows():
     at = _fresh_app()
-    over = _first_frame(at, "Eimerschritte")
+    over = _first_frame(at, "Bucket-Schritte")
     assert list(over["cmp1"])[:1] == [57] and list(over["cmp2"])[:1] == [45] and len(over) == 6 and set(over["Ergebnis gleich"]) == {"ja"}
     at.checkbox(key="show_all_labels").set_value(True).run(timeout=TIMEOUT)
     assert not at.exception
-    labels = _first_frame(at, "Eimer (Zeit, Last)")
+    labels = _first_frame(at, "Buckets (Zeit, Last)")
     assert len(labels) == 34 and labels["Label"][0] == "F01" and labels["Label"][33] == "F34"
-    assert sum(labels["ohne Eimer cmp1"]) == 57 and sum(labels["ohne Eimer cmp2"]) == 45 and sum(labels["mit Eimern cmp1"]) == 57 and sum(labels["mit Eimern cmp2"]) == 28
+    assert sum(labels["ohne Buckets cmp1"]) == 57 and sum(labels["ohne Buckets cmp2"]) == 45 and sum(labels["mit Buckets cmp1"]) == 57 and sum(labels["mit Buckets cmp2"]) == 28
 
 
 def test_the_step_slider_shows_the_chosen_label_and_its_skipped_labels():
     at = _fresh_app({"hzeit": "10", "hlast": "3", "label": "20"})
     text = " ".join(m.value for m in at.markdown)
-    assert "F20 entsteht am Kunden 3 mit Zeit 23, Last 8" in text and "**Mit Zeit 10 × Last 3:** cmp1 3, cmp2 0" in text and "**Vergleiche ohne Eimer:** cmp1 3, cmp2 3" in text
-    assert "F03 (Kunde 3, Zeit 22, Last 2): Last-Eimer 0 < 2" in text
+    assert "F20 entsteht am Kunden 3 mit Zeit 23, Last 8" in text and "**Mit Zeit 10 × Last 3:** cmp1 3, cmp2 0" in text and "**Vergleiche ohne Buckets:** cmp1 3, cmp2 3" in text
+    assert "F03 (Kunde 3, Zeit 22, Last 2): Last-Bucket 0 < 2" in text
     at.sidebar.slider(key="step_slider").set_value(1).run(timeout=TIMEOUT)
     assert not at.exception and "Bei diesem Label und dieser Einstellung wird kein Label übersprungen." in " ".join(m.value for m in at.markdown)
 
@@ -206,10 +206,10 @@ def test_the_hand_example_shows_the_rounding_sentence_with_the_measured_numbers(
 
 def test_the_band_table_follows_the_capacity_and_round_widgets():
     at = _fresh_app()
-    table = _first_frame(at, "Median Eimerschritte")
-    assert list(table["Läufe"]) == [40] * 14 and table["Einstellung"][0] == "ohne Eimer" and table["Median"][4] == "0,828"
+    table = _first_frame(at, "Median Bucket-Schritte")
+    assert list(table["Läufe"]) == [40] * 14 and table["Einstellung"][0] == "ohne Buckets" and table["Median"][4] == "0,828"
     at.radio(key="band_q").set_value(120).run(timeout=TIMEOUT)
     at.selectbox(key="band_round").set_value("1").run(timeout=TIMEOUT)
     assert not at.exception
-    t2 = _first_frame(at, "Median Eimerschritte")
+    t2 = _first_frame(at, "Median Bucket-Schritte")
     assert list(t2["Läufe"]) == [40] * 14 and t2["Median"][4] != "0,828"

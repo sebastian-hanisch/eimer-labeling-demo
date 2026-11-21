@@ -1,4 +1,4 @@
-"""Randfälle, an denen Kernroutinen erfahrungsgemäß brechen (DEMO-PLAYBOOK §12): Label genau auf der Eimergrenze, Breite 1, Eimer so breit wie der Horizont, t = H, ein Label am Kunden,
+"""Randfälle, an denen Kernroutinen erfahrungsgemäß brechen (DEMO-PLAYBOOK §12): Label genau auf der Bucket-Grenze, Breite 1, Buckets so breit wie der Horizont, t = H, ein Label am Kunden,
 leerer Kunde, n = 1 und n = 2, Gleichstände, Dualpreise 0, Kapazität unter jeder Last, Gedächtnis k = 0."""
 
 import pytest
@@ -13,20 +13,20 @@ def _inst(d, dem, ready=None, due=None, svc=0.0, H=100.0, Q=10):
     return Instance(n, ((0, 0),) * (n + 1), tuple(tuple(float(x) for x in r) for r in d), tuple(dem), tuple(ready or [0.0] * (n + 1)), tuple(due or [H] * (n + 1)), float(svc), float(H), Q)
 
 
-# Depot 0, Kunden 1, 2, 3: das Label über Kunde 1 erreicht Kunde 3 zur Zeit 15, das über Kunde 2 zur Zeit 20 (genau auf der Grenze des Zeit-Eimers 2 bei Breite 10)
+# Depot 0, Kunden 1, 2, 3: das Label über Kunde 1 erreicht Kunde 3 zur Zeit 15, das über Kunde 2 zur Zeit 20 (genau auf der Grenze des Zeit-Buckets 2 bei Breite 10)
 BOUNDARY = _inst([[0, 5, 10, 50], [5, 0, 100, 10], [10, 100, 0, 10], [50, 10, 10, 0]], (0, 3, 3, 3))
 BOUNDARY_PI = [0.0, 0.0, 20.0, 0.0]
 
 
 def test_label_exactly_on_a_bucket_border():
-    """t = 20 bei Breite 10: das neue Label liegt im Eimer 2; cmp2 sieht mit Sicherheitsrand auch Eimer 1 an (ein Vergleich mehr), Ergebnis gleich, nie mehr als ohne Eimer."""
+    """t = 20 bei Breite 10: das neue Label liegt im Bucket 2; cmp2 sieht mit Sicherheitsrand auch Bucket 1 an (ein Vergleich mehr), Ergebnis gleich, nie mehr als ohne Buckets."""
     exact = A.price(BOUNDARY, BOUNDARY_PI, 3, 10, None, rand=0.0, trace=True)
     safe = A.price(BOUNDARY, BOUNDARY_PI, 3, 10, None, rand=A.EPS, trace=True)
     base = A.price(BOUNDARY, BOUNDARY_PI, 3, None, None, rand=0.0)
     e = next(x for x in exact.events if x["time"] == 20.0 and x["node"] == 3)
     s = next(x for x in safe.events if x["time"] == 20.0 and x["node"] == 3)
     assert e["bucket"] == s["bucket"] == (2, 0)
-    assert len(e["ex2"]) == 1 and len(s["ex2"]) == 2        # das Label mit Zeit 15 (Eimer 1) liegt unter der Grenze; es kann nicht dominiert werden, wird aber mit Sicherheitsrand angesehen
+    assert len(e["ex2"]) == 1 and len(s["ex2"]) == 2        # das Label mit Zeit 15 (Bucket 1) liegt unter der Grenze; es kann nicht dominiert werden, wird aber mit Sicherheitsrand angesehen
     assert (exact.live, exact.routes) == (safe.live, safe.routes) == (base.live, base.routes)
     assert safe.cmp1 == exact.cmp1 and safe.cmp2 == exact.cmp2 + 1 and safe.comparisons <= base.comparisons
 
@@ -40,7 +40,7 @@ def test_width_one_and_width_equal_to_the_horizon():
     fine = A.price(BOUNDARY, BOUNDARY_PI, 3, 1, None, rand=0.0)
     assert (fine.live, fine.routes, fine.generated) == (base.live, base.routes, base.generated) and fine.steps > base.steps
     assert A.bucket_count(100.0, 1) == 101
-    h = A.price(BOUNDARY, BOUNDARY_PI, 3, 100, None, rand=0.0)       # Breite = Horizont: zwei Eimer (0 bis 99 und 100)
+    h = A.price(BOUNDARY, BOUNDARY_PI, 3, 100, None, rand=0.0)       # Breite = Horizont: zwei Buckets (0 bis 99 und 100)
     assert A.bucket_count(100.0, 100) == 2 and (h.live, h.routes) == (base.live, base.routes)
 
 
@@ -51,7 +51,7 @@ def test_arrival_exactly_at_the_horizon_lands_in_the_last_bucket():
     # eine Fahrt, die genau zur Zeit H zurückkehrt, ist zulässig; eine, die später käme, nicht
     late = _inst([[0, 51], [51, 0]], (0, 3), due=[100.0, 51.0])
     assert A.price(late, [0.0, 200.0], 1, 50, None, rand=0.0).routes == []
-    assert A.bucket_of(100.0, 50, A.bucket_count(100.0, 50)) == 2    # t = H im letzten Eimer
+    assert A.bucket_of(100.0, 50, A.bucket_count(100.0, 50)) == 2    # t = H im letzten Bucket
 
 
 def test_one_label_at_a_node_and_an_empty_node():

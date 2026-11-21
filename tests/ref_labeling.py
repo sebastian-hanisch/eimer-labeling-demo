@@ -1,8 +1,8 @@
-"""Unabhängiger Rechenweg für die Tests (kein Import aus dem Kern): Label-Verfahren mit Eimern in Mengen und Listen statt Bitmasken, Heap und Dictionary-Eimern,
+"""Unabhängiger Rechenweg für die Tests (kein Import aus dem Kern): Label-Verfahren mit Buckets in Mengen und Listen statt Bitmasken, Heap und Dictionary-Buckets,
 dazu die Aufzählung aller zulässigen elementaren Routen.
 
 `ref_price` rechnet wie das Handbeispiel von Hand: neue Labels in der Reihenfolge (Zeit, Entstehung), je neues Label die Kandidatenliste der lebenden Labels des Kunden,
-sortiert nach (Zeit-Eimer, Last-Eimer, Entstehung), gefiltert nach den Eimerbedingungen. Die Zähler (cmp1, cmp2, Eimerschritte) entstehen aus dieser Liste, nicht aus dem Eimer-Dictionary des Kerns."""
+sortiert nach (Zeit-Buckets, Last-Buckets, Entstehung), gefiltert nach den Bucket-Bedingungen. Die Zähler (cmp1, cmp2, Bucket-Schritte) entstehen aus dieser Liste, nicht aus dem Bucket-Dictionary des Kerns."""
 
 import math
 
@@ -25,7 +25,7 @@ def neighbours(p: dict, k: int) -> list:
 
 
 def ref_price(p: dict, pi, k: int, wt=None, wq=None, safe: bool = False) -> dict:
-    """Label-Verfahren mit Eimern (wt, wq; None = keiner). safe=True: Sicherheitsrand 1e-9 an den Eimergrenzen wie der Kern (Standard der Live-Rechnung), safe=False: exakte Grenzen."""
+    """Label-Verfahren mit Buckets (wt, wq; None = keiner). safe=True: Sicherheitsrand 1e-9 an den Bucket-Grenzen wie der Kern (Standard der Live-Rechnung), safe=False: exakte Grenzen."""
     n, d, svc, H, Q = p["n"], p["d"], p["svc"], p["H"], p["Q"]
     ng = neighbours(p, k)
     nt = 1 if wt is None else int(H / wt) + 1
@@ -67,7 +67,7 @@ def ref_price(p: dict, pi, k: int, wt=None, wq=None, safe: bool = False) -> dict
             hi_t, lo_t = bt(t2 + rand), bt(max(0.0, t2 - rand))
             live = [x for x in alive[j]]
             order = lambda x: (bt(labels[x]["t"]), bq(labels[x]["q"]), x)   # noqa: E731
-            # cmp1: Eimer mit Zeit-Index <= hi_t und Last-Index <= own_q, in Eimerreihenfolge, Abbruch beim ersten dominierenden Label
+            # cmp1: Buckets mit Zeit-Index <= hi_t und Last-Index <= own_q, in Bucket-Reihenfolge, Abbruch beim ersten dominierenden Label
             steps += (hi_t + 1) * (own_q + 1)
             cand1 = sorted((x for x in live if bt(labels[x]["t"]) <= hi_t and bq(labels[x]["q"]) <= own_q), key=order)
             killed_new = False
@@ -81,7 +81,7 @@ def ref_price(p: dict, pi, k: int, wt=None, wq=None, safe: bool = False) -> dict
                 dom += 1
                 labels.append(dict(t=t2, c=c2_, q=q2, mem=m2, node=j, parent=li, dead=True))
                 continue
-            # cmp2: Eimer mit Zeit-Index >= lo_t und Last-Index >= own_q
+            # cmp2: Buckets mit Zeit-Index >= lo_t und Last-Index >= own_q
             steps += (nt - lo_t) * (nq - own_q)
             cand2 = sorted((x for x in live if bt(labels[x]["t"]) >= lo_t and bq(labels[x]["q"]) >= own_q), key=order)
             dead_now = set()

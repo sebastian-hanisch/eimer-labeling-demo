@@ -37,9 +37,9 @@ def fmt_ratio(x: float) -> str:
 
 
 def config_name(wt: int, wq: int) -> str:
-    """Name einer Eimer-Einstellung: 'ohne Eimer', 'Zeit 10', 'Last 5', 'Zeit 10 × Last 5' (0 heißt kein Eimer dieser Art)."""
+    """Name einer Buckets-Einstellung: 'ohne Buckets', 'Zeit 10', 'Last 5', 'Zeit 10 × Last 5' (0 heißt kein Bucket dieser Art)."""
     if not wt and not wq:
-        return "ohne Eimer"
+        return "ohne Buckets"
     if not wq:
         return f"Zeit {wt}"
     if not wt:
@@ -66,7 +66,7 @@ class Settings:
 
 @dataclass(frozen=True)
 class Run:
-    """Zähler eines Laufs mit einer Eimer-Einstellung (0 = kein Eimer dieser Art) und ein Fingerabdruck des Ergebnisses (Routen, lebende Labels, erzeugte und gestrichene Labels)."""
+    """Zähler eines Laufs mit einer Buckets-Einstellung (0 = kein Bucket dieser Art) und ein Fingerabdruck des Ergebnisses (Routen, lebende Labels, erzeugte und gestrichene Labels)."""
 
     wt: int
     wq: int
@@ -101,7 +101,7 @@ def fingerprint(res: A.PricingResult) -> str:
 
 
 def live_run(inst: Instance, pi, wt: int, wq: int, max_labels=C.MAX_LABELS) -> Run:
-    """Ein Lauf mit Zeit-Eimerbreite `wt` und Last-Eimerbreite `wq` (0 = keiner) auf der Instanz mit den Dualpreisen `pi` (alle negativen Routen, Gedächtnis k = 5)."""
+    """Ein Lauf mit Zeit-Bucket-Breite `wt` und Last-Bucket-Breite `wq` (0 = keiner) auf der Instanz mit den Dualpreisen `pi` (alle negativen Routen, Gedächtnis k = 5)."""
     res = A.price(inst, pi, C.MEMORY_K, wt or None, wq or None, max_routes=10 ** 6, max_labels=max_labels)
     best_rc = res.best[0] if res.best else None
     best_route = res.best[1] if res.best else None
@@ -114,7 +114,7 @@ def same_result(a: Run, b: Run) -> bool:
 
 
 def net_cost(run: Run, weight: float) -> float:
-    """Aufwand = Vergleiche + Gewicht x Eimerschritte. Das Gewicht ist eine Annahme (Voreinstellung 0,1), keine Messung."""
+    """Aufwand = Vergleiche + Gewicht x Bucket-Schritte. Das Gewicht ist eine Annahme (Voreinstellung 0,1), keine Messung."""
     return run.comparisons + weight * run.steps
 
 
@@ -124,42 +124,42 @@ def saved_share(base: Run, run: Run) -> float | None:
 
 
 def net_ratio(base: Run, run: Run, weight: float) -> float | None:
-    """Aufwand mit Eimern geteilt durch Aufwand ohne Eimer (bei Gewicht `weight`); None, wenn der Bezug 0 ist."""
+    """Aufwand mit Buckets geteilt durch Aufwand ohne Buckets (bei Gewicht `weight`); None, wenn der Bezug 0 ist."""
     b = net_cost(base, weight)
     return None if b == 0 else net_cost(run, weight) / b
 
 
 def split_ratios(base: Run, run: Run) -> tuple:
-    """(Anteil cmp1, Anteil cmp2) der Vergleiche mit Eimern an denen ohne Eimer; None, wo der Bezug 0 ist."""
+    """(Anteil cmp1, Anteil cmp2) der Vergleiche mit Buckets an denen ohne Buckets; None, wo der Bezug 0 ist."""
     return (None if base.cmp1 == 0 else run.cmp1 / base.cmp1, None if base.cmp2 == 0 else run.cmp2 / base.cmp2)
 
 
 def best_zeit_width(runs: dict, weight: float) -> int:
-    """Zeit-Breite (0 = ohne Eimer) mit dem kleinsten Aufwand bei diesem Gewicht; bei Gleichstand die erste in der Reihenfolge von C.SWEEP_WT (ohne Eimer zuerst)."""
+    """Zeit-Breite (0 = ohne Buckets) mit dem kleinsten Aufwand bei diesem Gewicht; bei Gleichstand die erste in der Reihenfolge von C.SWEEP_WT (ohne Buckets zuerst)."""
     return min((w for w in C.SWEEP_WT if (w, 0) in runs), key=lambda w: net_cost(runs[(w, 0)], weight))
 
 
 # --- Verdikte -------------------------------------------------------------------------------------------------------------------------------
 
 def verdict_identical(same: bool) -> tuple:
-    """Die Eimer dürfen das Ergebnis nie ändern."""
+    """Die Buckets dürfen das Ergebnis nie ändern."""
     if same:
-        return ("success", "Dieselbe Menge lebender Labels wie ohne Eimer: ja. Gleich sind auch die Zahl der erzeugten und der gestrichenen Labels und die Liste der negativen Routen; "
+        return ("success", "Dieselbe Menge lebender Labels wie ohne Buckets: ja. Gleich sind auch die Zahl der erzeugten und der gestrichenen Labels und die Liste der negativen Routen; "
                            "nur die Zahl der Vergleiche ändert sich.")
-    return ("error", "Die Eimer ändern das Ergebnis (lebende Labels, Zahl der Labels oder Routen weichen vom Lauf ohne Eimer ab): Der Kern ist fehlerhaft.")
+    return ("error", "Die Buckets ändern das Ergebnis (lebende Labels, Zahl der Labels oder Routen weichen vom Lauf ohne Buckets ab): Der Kern ist fehlerhaft.")
 
 
 def verdict_saving(base: Run, run: Run, weight: float) -> tuple:
-    """Wie viel sparen die Eimer dieser Einstellung, vor und nach Abzug der Verwaltung (Gewicht je Eimerschritt)?"""
+    """Wie viel sparen die Buckets dieser Einstellung, vor und nach Abzug der Verwaltung (Gewicht je Bucket-Schritt)?"""
     if base.aborted:
         return ("warning", f"Die Rechnung ist nach {fmt_int(C.MAX_LABELS)} erzeugten Labels abgebrochen (Labelbudget der Live-Rechnung); die Zähler sind unvollständig. "
                            "Kleinere Instanz wählen oder die festen Messreihen in Experiment 5 ansehen.")
     if not run.wt and not run.wq:
-        return ("info", f"Kein Eimer gewählt: Das ist die Bezugsrechnung mit {fmt_int(base.comparisons)} Vergleichen. Eine Zeit- oder Lastbreite in der Seitenleiste wählen.")
+        return ("info", f"Kein Bucket gewählt: Das ist die Bezugsrechnung mit {fmt_int(base.comparisons)} Vergleichen. Eine Zeit- oder Lastbreite in der Seitenleiste wählen.")
     share = saved_share(base, run)
     ratio = net_ratio(base, run, weight)
     if share is None or ratio is None:
-        return ("info", "Ohne Eimer gibt es auf dieser Instanz keinen Vergleich: Hier ist nichts zu sparen.")
+        return ("info", "Ohne Buckets gibt es auf dieser Instanz keinen Vergleich: Hier ist nichts zu sparen.")
     head = f"{config_name(run.wt, run.wq)}: {fmt_int(run.comparisons)} statt {fmt_int(base.comparisons)} Vergleichen"
     if share > 0:
         head += f", also {fmt_pct(share * 100)} weniger."
@@ -167,26 +167,26 @@ def verdict_saving(base: Run, run: Run, weight: float) -> tuple:
         head += ": keine Ersparnis."
     else:
         head += f", also {fmt_pct(-share * 100)} mehr."
-    tail = (f" Zusammen mit {fmt_int(run.steps)} angesehenen Eimern (Bezug: {fmt_int(base.steps)}) und einem Gewicht von {fmt_dec(weight, 2)} je Eimerschritt "
-            f"(Annahme, keine Messung) liegt der Aufwand bei {fmt_pct(ratio * 100)} des Aufwands ohne Eimer")
+    tail = (f" Zusammen mit {fmt_int(run.steps)} angesehenen Buckets (Bezug: {fmt_int(base.steps)}) und einem Gewicht von {fmt_dec(weight, 2)} je Bucket-Schritt "
+            f"(Annahme, keine Messung) liegt der Aufwand bei {fmt_pct(ratio * 100)} des Aufwands ohne Buckets")
     if ratio < 1:
         return ("success", head + tail + f": netto werden {fmt_pct((1 - ratio) * 100)} gespart.")
-    return ("warning", head + tail + f": bei diesem Gewicht lohnt sich diese Eimerbreite nicht (netto {fmt_pct((ratio - 1) * 100)} mehr).")
+    return ("warning", head + tail + f": bei diesem Gewicht lohnt sich diese Bucket-Breite nicht (netto {fmt_pct((ratio - 1) * 100)} mehr).")
 
 
 def verdict_split(base: Run, zeit: Run, last: Run) -> tuple:
-    """Zeit-Eimer sparen fast nur die Prüfung „dominiert das neue Label alte?“ (cmp2), Last-Eimer auch „wird das neue Label dominiert?“ (cmp1)."""
+    """Zeit-Buckets sparen fast nur die Prüfung „dominiert das neue Label alte?“ (cmp2), Last-Buckets auch „wird das neue Label dominiert?“ (cmp1)."""
     if base.aborted:
         return ("warning", "Die Rechnung ist am Labelbudget abgebrochen; die Aufteilung ist unvollständig.")
     z1, z2 = split_ratios(base, zeit)
     l1, l2 = split_ratios(base, last)
     if None in (z1, z2, l1, l2):
         return ("info", "Ohne Vergleiche in einer der beiden Prüfungen gibt es keine Aufteilung zu zeigen.")
-    text = (f"{config_name(zeit.wt, zeit.wq)} lässt cmp1 bei {fmt_pct(z1 * 100)} und cmp2 bei {fmt_pct(z2 * 100)} der Vergleiche ohne Eimer; "
+    text = (f"{config_name(zeit.wt, zeit.wq)} lässt cmp1 bei {fmt_pct(z1 * 100)} und cmp2 bei {fmt_pct(z2 * 100)} der Vergleiche ohne Buckets; "
             f"{config_name(last.wt, last.wq)} lässt cmp1 bei {fmt_pct(l1 * 100)} und cmp2 bei {fmt_pct(l2 * 100)}.")
     if z1 > 0.95 and z2 < 0.95 and l1 < z1:
-        return ("success", text + " Die Zeit-Eimer sparen hier nur cmp2; die Last-Eimer sparen auch cmp1.")
-    return ("info", text + " Auf dieser Instanz zeigt sich das Muster „Zeit-Eimer sparen nur cmp2, Last-Eimer auch cmp1“ nicht in dieser Deutlichkeit.")
+        return ("success", text + " Die Zeit-Buckets sparen hier nur cmp2; die Last-Buckets sparen auch cmp1.")
+    return ("info", text + " Auf dieser Instanz zeigt sich das Muster „Zeit-Buckets sparen nur cmp2, Last-Buckets auch cmp1“ nicht in dieser Deutlichkeit.")
 
 
 def verdict_optimum(runs: dict, weights=C.BAND_WEIGHTS) -> tuple:
@@ -195,13 +195,13 @@ def verdict_optimum(runs: dict, weights=C.BAND_WEIGHTS) -> tuple:
         return ("warning", "Mindestens ein Lauf ist am Labelbudget abgebrochen; die Kurven sind unvollständig.")
 
     def name(w):
-        return "ohne Eimer" if w == 0 else f"Zeit-Breite {w}"
+        return "ohne Buckets" if w == 0 else f"Zeit-Breite {w}"
     parts = [f"Gewicht {fmt_dec(g, 1)}: {name(best_zeit_width(runs, g))}" for g in weights]
-    return ("info", "Beste Wahl auf dieser Instanz (kleinster Aufwand aus Vergleichen und Eimerschritten): " + "; ".join(parts) + ".")
+    return ("info", "Beste Wahl auf dieser Instanz (kleinster Aufwand aus Vergleichen und Bucket-Schritten): " + "; ".join(parts) + ".")
 
 
 def verdict_monotone(runs: dict) -> tuple:
-    """Die Vergleiche sinken mit feineren Zeit-Eimern, solange nichts anderes dazwischenkommt; steigen sie bei einem Schritt der Reihe von C.SWEEP_WT, steht der Schritt im Text."""
+    """Die Vergleiche sinken mit feineren Zeit-Buckets, solange nichts anderes dazwischenkommt; steigen sie bei einem Schritt der Reihe von C.SWEEP_WT, steht der Schritt im Text."""
     order = [w for w in C.SWEEP_WT if (w, 0) in runs]
     cmps = [runs[(w, 0)].comparisons for w in order]
     up = [(order[i], order[i + 1]) for i in range(len(order) - 1) if cmps[i + 1] > cmps[i]]
@@ -209,14 +209,14 @@ def verdict_monotone(runs: dict) -> tuple:
     if any(runs[(w, 0)].aborted for w in order):
         return ("warning", "Mindestens ein Lauf ist am Labelbudget abgebrochen; die Reihe ist unvollständig.")
     if up:
-        return ("info", "Bei diesem Schritt der Reihe steigen die Vergleiche mit dem feineren Eimer: " + ", ".join(f"{_zeit_name(a)} → {_zeit_name(b)}" for a, b in up)
-                + ". Deutung (nicht eigens gemessen): Mit Eimern wird in anderer Reihenfolge geprüft (nach Eimern statt nach Einfügen), und cmp1 bricht beim ersten dominierenden Label ab; dadurch kann cmp1 im Einzelfall leicht steigen.")
-    return ("info", f"Die Vergleiche steigen bei keinem Schritt der Reihe, von {fmt_int(cmps[0])} ohne Eimer auf {fmt_int(cmps[-1])} bei Breite {order[-1]}; "
-                    f"die angesehenen Eimer steigen dabei von {fmt_int(steps[0])} auf {fmt_int(steps[-1])}.")
+        return ("info", "Bei diesem Schritt der Reihe steigen die Vergleiche mit dem feineren Bucket: " + ", ".join(f"{_zeit_name(a)} → {_zeit_name(b)}" for a, b in up)
+                + ". Deutung (nicht eigens gemessen): Mit Buckets wird in anderer Reihenfolge geprüft (nach Buckets statt nach Einfügen), und cmp1 bricht beim ersten dominierenden Label ab; dadurch kann cmp1 im Einzelfall leicht steigen.")
+    return ("info", f"Die Vergleiche steigen bei keinem Schritt der Reihe, von {fmt_int(cmps[0])} ohne Buckets auf {fmt_int(cmps[-1])} bei Breite {order[-1]}; "
+                    f"die angesehenen Buckets steigen dabei von {fmt_int(steps[0])} auf {fmt_int(steps[-1])}.")
 
 
 def _zeit_name(w: int) -> str:
-    return "ohne Eimer" if w == 0 else f"Zeit {w}"
+    return "ohne Buckets" if w == 0 else f"Zeit {w}"
 
 
 # --- Handbeispiel ---------------------------------------------------------------------------------------------------------------------------
@@ -225,12 +225,12 @@ HAND_CONFIGS = ((0, 0), (10, 0), (0, 3), (10, 3), (5, 0), (5, 3))
 
 
 def hand_run(wt: int, wq: int, rand: float = 0.0, trace: bool = False) -> A.PricingResult:
-    """Das Handbeispiel mit Eimerbreiten (0 = keine); `rand = 0`: exakte Eimergrenzen (ganze Zahlen), `rand = A.EPS`: Fassung der Messreihen."""
+    """Das Handbeispiel mit Bucket-Breiten (0 = keine); `rand = 0`: exakte Bucket-Grenzen (ganze Zahlen), `rand = A.EPS`: Fassung der Messreihen."""
     return A.price(hand_instance(), HAND_DUALS, hand_instance().n, wt or None, wq or None, rand=rand, max_routes=10 ** 6, trace=trace)
 
 
 def hand_overview(rand: float = 0.0) -> list:
-    """Eine Zeile je Einstellung des Handbeispiels: Zähler und Vergleich mit dem Lauf ohne Eimer."""
+    """Eine Zeile je Einstellung des Handbeispiels: Zähler und Vergleich mit dem Lauf ohne Buckets."""
     base = hand_run(0, 0, rand)
     rows = []
     for wt, wq in HAND_CONFIGS:
@@ -241,7 +241,7 @@ def hand_overview(rand: float = 0.0) -> list:
 
 
 def hand_label_info(events: list) -> dict:
-    """Nummer des Labels -> (Knoten, Zeit, Last, Eimer (Zeit-Index, Last-Index)) für alle neuen Labels eines Laufs mit trace."""
+    """Nummer des Labels -> (Knoten, Zeit, Last, Buckets (Zeit-Index, Last-Index)) für alle neuen Labels eines Laufs mit trace."""
     return {e["nr"]: (e["node"], e["time"], e["load"], e["bucket"]) for e in events}
 
 
@@ -252,23 +252,23 @@ def hand_bucket_of(nr: int, info: dict, wt: int, wq: int) -> tuple:
 
 
 def skip_reason(kind: str, o_bucket: tuple, own: tuple) -> str:
-    """Warum ein lebendes Label an diesem Knoten bei der Prüfung `kind` ('cmp1' oder 'cmp2') nicht angesehen wird (aus den Eimerindizes)."""
+    """Warum ein lebendes Label an diesem Knoten bei der Prüfung `kind` ('cmp1' oder 'cmp2') nicht angesehen wird (aus den Bucket-Indizes)."""
     (ot, oq), (nt_, nq_) = o_bucket, own
     if kind == "cmp1":
         if ot > nt_:
-            return f"Zeit-Eimer {ot} > {nt_}"
+            return f"Zeit-Bucket {ot} > {nt_}"
         if oq > nq_:
-            return f"Last-Eimer {oq} > {nq_}"
+            return f"Last-Bucket {oq} > {nq_}"
     else:
         if ot < nt_:
-            return f"Zeit-Eimer {ot} < {nt_}"
+            return f"Zeit-Bucket {ot} < {nt_}"
         if oq < nq_:
-            return f"Last-Eimer {oq} < {nq_}"
+            return f"Last-Bucket {oq} < {nq_}"
     return ""
 
 
 def hand_step_rows(wt: int, wq: int) -> list:
-    """Eine Zeile je neues Label des Handbeispiels: Eimer, Vergleiche ohne und mit Eimern, Entscheidung."""
+    """Eine Zeile je neues Label des Handbeispiels: Buckets, Vergleiche ohne und mit Buckets, Entscheidung."""
     base = hand_run(0, 0, trace=True).events
     bucketed = hand_run(wt, wq, trace=True).events
     rows = []
@@ -280,7 +280,7 @@ def hand_step_rows(wt: int, wq: int) -> list:
 
 
 def hand_step_detail(nr: int, wt: int, wq: int) -> dict:
-    """Die Prüfung des neuen Labels Nummer `nr` (1 bis 34) mit Eimern: Eimertabelle des Knotens vor dem Einfügen, angesehene und übersprungene Labels mit Grund."""
+    """Die Prüfung des neuen Labels Nummer `nr` (1 bis 34) mit Buckets: Bucket-Tabelle des Knotens vor dem Einfügen, angesehene und übersprungene Labels mit Grund."""
     res = hand_run(wt, wq, trace=True)
     base = hand_run(0, 0, trace=True)
     info = hand_label_info(res.events)
@@ -305,7 +305,7 @@ def hand_step_detail(nr: int, wt: int, wq: int) -> dict:
 
 
 def bucket_axis_labels(limit: int, width: int, count: int, unit: str) -> list:
-    """Beschriftung der Eimerindizes: '0–9', '10–19', …, letzter Eimer '40 und mehr'; ohne Breite ein einziger Eimer."""
+    """Beschriftung der Bucket-Indizes: '0–9', '10–19', …, letzter Bucket '40 und mehr'; ohne Breite ein einziger Bucket."""
     if not width:
         return [f"alle {unit}"]
     labels = [f"{i * width}–{(i + 1) * width - 1}" for i in range(count - 1)]
@@ -314,7 +314,7 @@ def bucket_axis_labels(limit: int, width: int, count: int, unit: str) -> list:
 
 
 def rounding_difference() -> dict:
-    """E12.5: dasselbe Handbeispiel mit exakten Eimergrenzen und mit dem Sicherheitsrand der Messreihen (cmp2 bei Zeit-Eimer 10 und bei Zeit 10 × Last 3)."""
+    """E12.5: dasselbe Handbeispiel mit exakten Bucket-Grenzen und mit dem Sicherheitsrand der Messreihen (cmp2 bei Zeit-Bucket 10 und bei Zeit 10 × Last 3)."""
     out = {}
     for wt, wq in ((10, 0), (10, 3)):
         out[(wt, wq)] = (hand_run(wt, wq, 0.0).cmp2, hand_run(wt, wq, A.RAND_MESSCODE).cmp2)
@@ -326,11 +326,11 @@ def verdict_hand(rows: list, wt: int, wq: int) -> tuple:
     base = rows[0]
     sel = next(r for r in rows if (r["wt"], r["wq"]) == (wt, wq))   # HAND_CONFIGS enthält jede Kombination der Handbeispiel-Regler
     if not sel["same"]:
-        return ("error", "Die Eimer ändern am Handbeispiel das Ergebnis: Der Kern ist fehlerhaft.")
+        return ("error", "Die Buckets ändern am Handbeispiel das Ergebnis: Der Kern ist fehlerhaft.")
     if not wt and not wq:
-        return ("info", f"Ohne Eimer prüft das Verfahren jedes neue Label gegen alle lebenden Labels des Knotens: {base['cmp1']} Vergleiche für „wird das neue Label dominiert?“ und {base['cmp2']} für „dominiert das neue Label alte?“.")
+        return ("info", f"Ohne Buckets prüft das Verfahren jedes neue Label gegen alle lebenden Labels des Knotens: {base['cmp1']} Vergleiche für „wird das neue Label dominiert?“ und {base['cmp2']} für „dominiert das neue Label alte?“.")
     return ("success", f"{sel['name']}: dieselben {base['generated']} erzeugten Labels, dieselben {base['dominated']} gestrichenen, dieselbe beste Route. {sel['cmp1']} + {sel['cmp2']} = {sel['comparisons']} Vergleiche statt "
-                       f"{base['cmp1']} + {base['cmp2']} = {base['comparisons']}; angesehene Eimer: {sel['steps']} statt {base['steps']}.")
+                       f"{base['cmp1']} + {base['cmp2']} = {base['comparisons']}; angesehene Buckets: {sel['steps']} statt {base['steps']}.")
 
 
 # --- Feste Messreihen -----------------------------------------------------------------------------------------------------------------------
@@ -351,7 +351,7 @@ def band_comparisons(lauf: dict, cfg: tuple) -> int:
 
 
 def band_ratio(lauf: dict, cfg: tuple, part: str = "all", weight: float = 0.0) -> float:
-    """Verhältnis (Aufwand mit Eimern) / (Aufwand ohne Eimer) eines Laufs; part 'all' (cmp1 + cmp2), 'cmp1' oder 'cmp2'; Aufwand = Vergleiche + weight x Eimerschritte (nur bei 'all')."""
+    """Verhältnis (Aufwand mit Buckets) / (Aufwand ohne Buckets) eines Laufs; part 'all' (cmp1 + cmp2), 'cmp1' oder 'cmp2'; Aufwand = Vergleiche + weight x Bucket-Schritte (nur bei 'all')."""
     v, b = lauf["einstellungen"][cfg], lauf["einstellungen"][(0, 0)]
     if part == "cmp1":
         return v[2] / b[2]
@@ -371,13 +371,13 @@ def select(laeufe: list, q=None, runde=None, typ=None) -> list:
 
 
 def band_time_ratio(sel: list, cfg: tuple):
-    """Median des Verhältnisses der gemessenen Sekunden (Einstellung / ohne Eimer) über die Läufe, deren Lauf ohne Eimer länger als 0,02 s dauerte; nur Information (parallele Läufe)."""
+    """Median des Verhältnisses der gemessenen Sekunden (Einstellung / ohne Buckets) über die Läufe, deren Lauf ohne Buckets länger als 0,02 s dauerte; nur Information (parallele Läufe)."""
     ratios = [x["einstellungen"][cfg][6] / x["einstellungen"][(0, 0)][6] for x in sel if x["einstellungen"][(0, 0)][6] > 0.02]
     return statistics.median(ratios) if ratios else None
 
 
 def band_table(laeufe: list, q: int, runde: str, weight: float = 0.1) -> list:
-    """Eine Zeile je Einstellung für eine Zelle (Kapazität, Runde): Median, Mittel, Maximum des Vergleichs-Verhältnisses, Median von cmp1 und cmp2, Median der Eimerschritte, Aufwand mit Gewicht."""
+    """Eine Zeile je Einstellung für eine Zelle (Kapazität, Runde): Median, Mittel, Maximum des Vergleichs-Verhältnisses, Median von cmp1 und cmp2, Median der Bucket-Schritte, Aufwand mit Gewicht."""
     sel = select(laeufe, q, runde)
     rows = []
     for cfg in C.BAND_CONFIGS:
@@ -393,7 +393,7 @@ LABEL_CLASSES = ((0, 2000), (2000, 10000), (10000, 50000), (50000, 10 ** 9))
 
 
 def label_class_table(laeufe: list, cfgs=((10, 0), (1, 0), (0, 5), (10, 5))) -> list:
-    """Median des Vergleichs-Verhältnisses je Klasse der Labelzahl ohne Eimer (alle Läufe beider Kapazitäten) und Vergleiche je Label ohne Eimer (Median)."""
+    """Median des Vergleichs-Verhältnisses je Klasse der Labelzahl ohne Buckets (alle Läufe beider Kapazitäten) und Vergleiche je Label ohne Buckets (Median)."""
     rows = []
     for lo, hi in LABEL_CLASSES:
         sel = [x for x in laeufe if lo <= x["einstellungen"][(0, 0)][0] < hi]
@@ -420,12 +420,12 @@ def optimum_counts(laeufe: list, q: int, weight: float) -> dict:
 
 
 def cmp1_share(laeufe: list) -> float:
-    """Median des Anteils von cmp1 an allen Vergleichen ohne Eimer."""
+    """Median des Anteils von cmp1 an allen Vergleichen ohne Buckets."""
     return statistics.median(x["einstellungen"][(0, 0)][2] / band_comparisons(x, (0, 0)) for x in laeufe)
 
 
 def all_identical(laeufe: list) -> tuple:
-    """(Zahl der Zeilen, davon mit gleichem Ergebnis wie ohne Eimer, davon abgebrochen: es gibt keine Abbruch-Spalte, die Läufe haben kein Labelbudget)."""
+    """(Zahl der Zeilen, davon mit gleichem Ergebnis wie ohne Buckets, davon abgebrochen: es gibt keine Abbruch-Spalte, die Läufe haben kein Labelbudget)."""
     rows = [v for x in laeufe for v in x["einstellungen"].values()]
     return len(rows), sum(1 for v in rows if v[5])
 
@@ -439,7 +439,7 @@ def verdict_bands(laeufe: list, q: int, runde: str, cfg: tuple, weight: float) -
     below = sum(1 for r in nets if r < 1)
     s = stats_of(ratios)
     n = stats_of(nets)
-    text = (f"Kapazität {q}, Dualpreise {'der letzten Runde' if runde == 'ende' else f'der Runde {runde}'}, {config_name(*cfg)}: weniger Vergleiche als ohne Eimer in {fewer} von {s['n']} Läufen "
-            f"(Median des Verhältnisses {fmt_ratio(s['median'])}, Maximum {fmt_ratio(s['max'])}); mit Gewicht {fmt_dec(weight, 2)} je Eimerschritt (Annahme) weniger Aufwand in {below} von {n['n']} Läufen "
+    text = (f"Kapazität {q}, Dualpreise {'der letzten Runde' if runde == 'ende' else f'der Runde {runde}'}, {config_name(*cfg)}: weniger Vergleiche als ohne Buckets in {fewer} von {s['n']} Läufen "
+            f"(Median des Verhältnisses {fmt_ratio(s['median'])}, Maximum {fmt_ratio(s['max'])}); mit Gewicht {fmt_dec(weight, 2)} je Bucket-Schritt (Annahme) weniger Aufwand in {below} von {n['n']} Läufen "
             f"(Median {fmt_ratio(n['median'])}).")
     return ("success" if n["median"] < 1 else "warning", text)

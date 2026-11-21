@@ -1,16 +1,16 @@
-"""Kern: Label-Verfahren für den Weg mit den kleinsten reduzierten Kosten (Preisproblem der Spaltengenerierung), Dominanzprüfung wahlweise mit Eimern je Knoten.
+"""Kern: Label-Verfahren für den Weg mit den kleinsten reduzierten Kosten (Preisproblem der Spaltengenerierung), Dominanzprüfung wahlweise mit Buckets je Knoten.
 
 Ein Label ist ein Teilweg: (Zeit, Kosten, Last, Gedächtnis, Knoten). Das Verfahren verlängert Labels in Zeitreihenfolge und streicht dominierte Labels
-(Kosten, Zeit, Last und Gedächtnis des anderen Labels sind alle höchstens so groß, das Gedächtnis als Teilmenge). **Eimer** ordnen die lebenden Labels eines Knotens nach
+(Kosten, Zeit, Last und Gedächtnis des anderen Labels sind alle höchstens so groß, das Gedächtnis als Teilmenge). **Buckets** ordnen die lebenden Labels eines Knotens nach
 Zeit und Last in Fächer; die beiden Prüfungen sehen nur die Fächer an, in denen ein dominierendes bzw. dominiertes Label überhaupt liegen kann. Das Ergebnis ändert sich dadurch nicht,
 nur die Zahl der Dominanzvergleiche (und der Fächer, die dafür angesehen werden).
 
 Einheiten (je eine Regel, DEMO-PLAYBOOK §1b): `bucket_of`, `bucket_count`, `dominates`, `price` (Komposition), `check_route` (unabhängiger Routenprüfer).
 Gezählt werden Vergleiche, keine Sekunden. Zufall kommt nur in `eml_scenario.make_instance` vor (Generator `random.Random(seed)`).
 
-Eimerrand (Entscheidung E12.5): Die Dominanzprüfung selbst vergleicht mit der Toleranz `EPS` (Kosten, Zeit). Damit ein Label, dessen Zeit nur um Rundung neben einer Eimergrenze liegt,
-nie im falschen Eimer gesucht wird, beginnt die Suche mit dem Eimer von `t ± rand`. Die festen Messreihen und die Live-Rechnung nehmen `rand = EPS` (die Fassung der Messung); liegt die
-Zeit genau auf einer Eimergrenze, sieht die Prüfung „dominiert das neue Label alte?“ dann einen Eimer mehr an: unnötig, aber nie falsch. Das Handbeispiel (ganze Zahlen) rechnet mit
+Bucket-Rand (Entscheidung E12.5): Die Dominanzprüfung selbst vergleicht mit der Toleranz `EPS` (Kosten, Zeit). Damit ein Label, dessen Zeit nur um Rundung neben einer Bucket-Grenze liegt,
+nie im falschen Bucket gesucht wird, beginnt die Suche mit dem Bucket von `t ± rand`. Die festen Messreihen und die Live-Rechnung nehmen `rand = EPS` (die Fassung der Messung); liegt die
+Zeit genau auf einer Bucket-Grenze, sieht die Prüfung „dominiert das neue Label alte?“ dann einen Bucket mehr an: unnötig, aber nie falsch. Das Handbeispiel (ganze Zahlen) rechnet mit
 `rand = 0` (exakte Grenzen); `tests/test_algorithm.py` zeigt beide Fassungen und ihren Unterschied."""
 
 import heapq
@@ -20,7 +20,7 @@ from dataclasses import dataclass, field
 from eml_scenario import Instance, ng_masks
 
 EPS = 1e-9
-RAND_MESSCODE = EPS        # Sicherheitsrand der Eimersuche in den Messreihen und in der Live-Rechnung (siehe Modul-Docstring)
+RAND_MESSCODE = EPS        # Sicherheitsrand der Bucket-Suche in den Messreihen und in der Live-Rechnung (siehe Modul-Docstring)
 _BIG = 10 ** 9
 
 # Positionen im Label (Liste, damit „gestrichen“ in place gesetzt werden kann)
@@ -36,7 +36,7 @@ class PricingResult:
     dominated: int                  # gestrichene Labels (sofort verworfene und später entfernte)
     cmp1: int                       # Vergleiche „wird das neue Label dominiert?“
     cmp2: int                       # Vergleiche „dominiert das neue Label alte?“
-    steps: int                      # angesehene Eimerindizes (auch leere), nach Formel gezählt
+    steps: int                      # angesehene Bucket-Indizes (auch leere), nach Formel gezählt
     aborted: bool                   # Abbruch am Labelbudget
     live: tuple                     # sortierte (Knoten, Zeit, Kosten, Last, Gedächtnis) aller lebenden Labels
     events: list = field(default_factory=list)   # nur bei trace=True
@@ -52,12 +52,12 @@ class PricingResult:
 
 
 def bucket_count(limit, width) -> int:
-    """Zahl der Eimerindizes für Werte von 0 bis `limit` bei Eimerbreite `width` (None = ein einziger Eimer): int(limit / width) + 1."""
+    """Zahl der Bucket-Indizes für Werte von 0 bis `limit` bei Bucket-Breite `width` (None = ein einziger Bucket): int(limit / width) + 1."""
     return 1 if width is None else int(limit / width) + 1
 
 
 def bucket_of(value, width, count) -> int:
-    """Eimerindex eines Werts: int(value / width), am letzten Eimer abgeschnitten; ohne Breite immer 0."""
+    """Bucket-Index eines Werts: int(value / width), am letzten Bucket abgeschnitten; ohne Breite immer 0."""
     if width is None:
         return 0
     b = int(value / width)
@@ -85,14 +85,14 @@ def _route_of(labels, li) -> tuple:
 
 
 def price(inst: Instance, pi, k: int, wt=None, wq=None, rand: float = RAND_MESSCODE, max_routes: int = 15, max_labels=None, trace: bool = False) -> PricingResult:
-    """Bestes Label-Verfahren mit Eimern je Knoten (Zeit-Eimer der Breite `wt`, Last-Eimer der Breite `wq`; None = kein Eimer dieser Art).
+    """Bestes Label-Verfahren mit Buckets je Knoten (Zeit-Buckets der Breite `wt`, Last-Buckets der Breite `wq`; None = kein Bucket dieser Art).
 
-    `pi[0] = 0`, `pi[j]` Dualpreis des Kunden j; `k` Größe des Gedächtnisses (k = n elementar). Die Eimer je Knoten stehen in einem Dictionary (Schlüssel (Zeit-Index, Last-Index)),
-    ihre belegten Schlüssel in einer sortierten Liste: durchlaufen werden nur belegte Eimer, in der Reihenfolge Zeit-Index, Last-Index, im Eimer Einfügereihenfolge.
-    Ohne Eimer (wt = wq = None) gibt es einen Eimer je Knoten: die Prüfung läuft in Einfügereihenfolge über alle lebenden Labels des Knotens.
+    `pi[0] = 0`, `pi[j]` Dualpreis des Kunden j; `k` Größe des Gedächtnisses (k = n elementar). Die Buckets je Knoten stehen in einem Dictionary (Schlüssel (Zeit-Index, Last-Index)),
+    ihre belegten Schlüssel in einer sortierten Liste: durchlaufen werden nur belegte Buckets, in der Reihenfolge Zeit-Index, Last-Index, im Bucket Einfügereihenfolge.
+    Ohne Buckets (wt = wq = None) gibt es einen Bucket je Knoten: die Prüfung läuft in Einfügereihenfolge über alle lebenden Labels des Knotens.
 
-    cmp1: ein dominierendes Label hat Zeit <= t und Last <= q, liegt also in einem Eimer mit Zeit-Index <= dem von t und Last-Index <= dem von q (Abbruch beim ersten Treffer).
-    cmp2: ein vom neuen Label dominiertes Label hat Zeit >= t und Last >= q (Eimer mit Zeit-Index >= und Last-Index >=). Eimerschritte: alle Indizes im Suchbereich, auch leere.
+    cmp1: ein dominierendes Label hat Zeit <= t und Last <= q, liegt also in einem Bucket mit Zeit-Index <= dem von t und Last-Index <= dem von q (Abbruch beim ersten Treffer).
+    cmp2: ein vom neuen Label dominiertes Label hat Zeit >= t und Last >= q (Buckets mit Zeit-Index >= und Last-Index >=). Bucket-Schritte: alle Indizes im Suchbereich, auch leere.
     `max_labels`: Abbruch (aborted = True), sobald so viele Labels erzeugt sind. `trace`: je neues Label eine Entscheidung in `events`."""
     n = inst.n
     ng = ng_masks(inst, k)
@@ -142,7 +142,7 @@ def price(inst: Instance, pi, k: int, wt=None, wq=None, rand: float = RAND_MESSC
             if trace:
                 before = [labels[oi][NR] for key in kj for oi in bj[key]]
                 ev = dict(nr=generated - 1, node=j, time=t2, cost=c2, load=q2, bucket=(own_t, own_q), live_before=before, ex1=[], ex2=[], killer=None, killed=[])
-            # (1) wird das neue Label dominiert? Suche in Eimern mit Zeit-Index <= hi_t und Last-Index <= bq2
+            # (1) wird das neue Label dominiert? Suche in Buckets mit Zeit-Index <= hi_t und Last-Index <= bq2
             steps += (hi_t + 1) * (bq2 + 1)
             keep = True
             for x in range(bisect_right(kj, (hi_t, _BIG))):
@@ -166,7 +166,7 @@ def price(inst: Instance, pi, k: int, wt=None, wq=None, rand: float = RAND_MESSC
                     ev["status"] = "dominiert"
                     events.append(ev)
                 continue
-            # (2) dominiert das neue Label alte? Suche in Eimern mit Zeit-Index >= lo_t und Last-Index >= bq2
+            # (2) dominiert das neue Label alte? Suche in Buckets mit Zeit-Index >= lo_t und Last-Index >= bq2
             steps += (nt - lo_t) * (nq - bq2)
             for x in range(bisect_left(kj, (lo_t, -1)), len(kj)):
                 key = kj[x]

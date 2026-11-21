@@ -6,13 +6,13 @@ import eml_constants as C
 import eml_evaluation as ev
 import eml_presets as P
 
-DEFAULT = "Zeit-Eimer 10 (Voreinstellung)"
+DEFAULT = "Zeit-Bucket 10 (Voreinstellung)"
 # Erwartung je Szenario: Art des Verdikts der Ersparnis (Zufallsinstanz) und ein Textstück daraus; die Art des Handbeispiel-Verdikts ist immer "success" (andere Einstellung als „keine“)
 EXPECTED = {
-    "Zeit-Eimer 10 (Voreinstellung)": ("warning", "5 106 statt 5 522 Vergleichen, also 7,5 % weniger"),
-    "Last-Eimer 5": ("success", "3 724 statt 5 522 Vergleichen, also 32,6 % weniger"),
-    "Zeit- und Last-Eimer zusammen": ("warning", "3 586 statt 5 522 Vergleichen, also 35,1 % weniger"),
-    "Sehr feine Zeit-Eimer (Breite 1)": ("warning", "5 055 statt 5 522 Vergleichen, also 8,5 % weniger"),
+    "Zeit-Bucket 10 (Voreinstellung)": ("warning", "5 106 statt 5 522 Vergleichen, also 7,5 % weniger"),
+    "Last-Bucket 5": ("success", "3 724 statt 5 522 Vergleichen, also 32,6 % weniger"),
+    "Zeit- und Last-Buckets zusammen": ("warning", "3 586 statt 5 522 Vergleichen, also 35,1 % weniger"),
+    "Sehr feine Zeit-Buckets (Breite 1)": ("warning", "5 055 statt 5 522 Vergleichen, also 8,5 % weniger"),
     "Verwaltung gleich teuer wie ein Vergleich (Gewicht 1)": ("warning", "5 310 statt 5 522 Vergleichen, also 3,8 % weniger"),
     "Gruppierte Kunden, Kapazität 120, Breite 100": ("success", "36 862 statt 50 135 Vergleichen, also 26,5 % weniger"),
 }
@@ -69,24 +69,24 @@ def test_expected_verdict_lines_of_every_preset(name):
 
 def test_the_help_texts_state_what_the_scenarios_show():
     """Hilfetexte sind Behauptungen: gemessen an der Instanz des Szenarios."""
-    base, last = _live(C.PRESETS["Last-Eimer 5"])
-    assert last.cmp1 < base.cmp1 and "auch Vergleiche der Prüfung „wird das neue Label dominiert?“" in C.PRESET_HELP["Last-Eimer 5"]
-    p = C.PRESETS["Zeit- und Last-Eimer zusammen"]
+    base, last = _live(C.PRESETS["Last-Bucket 5"])
+    assert last.cmp1 < base.cmp1 and "auch Vergleiche der Prüfung „wird das neue Label dominiert?“" in C.PRESET_HELP["Last-Bucket 5"]
+    p = C.PRESETS["Zeit- und Last-Buckets zusammen"]
     base, both = _live(p)
-    _, last5 = _live(C.PRESETS["Last-Eimer 5"])
+    _, last5 = _live(C.PRESETS["Last-Bucket 5"])
     _, zeit10 = _live(C.PRESETS[DEFAULT])
     assert both.comparisons < min(last5.comparisons, zeit10.comparisons) and both.steps > max(last5.steps, zeit10.steps)
-    assert "weniger Vergleiche als mit einer Eimerart allein, aber auch viel mehr angesehene Eimer" in C.PRESET_HELP["Zeit- und Last-Eimer zusammen"]
-    # feinste Zeit-Breite: die wenigsten Vergleiche unter allen Zeit-Eimern, die meisten Eimerschritte
-    p = C.PRESETS["Sehr feine Zeit-Eimer (Breite 1)"]
+    assert "weniger Vergleiche als mit einer Bucket-Art allein, aber auch viel mehr angesehene Buckets" in C.PRESET_HELP["Zeit- und Last-Buckets zusammen"]
+    # feinste Zeit-Breite: die wenigsten Vergleiche unter allen Zeit-Buckets, die meisten Bucket-Schritte
+    p = C.PRESETS["Sehr feine Zeit-Buckets (Breite 1)"]
     s = ev.Settings(p["n"], p["width"], p["typ"], p["q"], p["seed"])
     pi = ev.live_duals(s)["ende"]
     runs = {w: ev.live_run(ev.instance_of(s), pi, w, 0) for w in C.WT_OPTIONS if w}
     assert runs[1].comparisons == min(r.comparisons for r in runs.values()) and runs[1].steps == max(r.steps for r in runs.values())
-    # Gewicht 1: mit Zeit-Eimer 40 ist der Aufwand höher als ohne Eimer
+    # Gewicht 1: mit Zeit-Bucket 40 ist der Aufwand höher als ohne Buckets
     p = C.PRESETS["Verwaltung gleich teuer wie ein Vergleich (Gewicht 1)"]
     base, run = _live(p)
-    assert p["weight"] == 1.0 and ev.net_ratio(base, run, 1.0) > 1 and "lohnt sich diese Eimerbreite auf dieser Instanz nicht" in C.PRESET_HELP["Verwaltung gleich teuer wie ein Vergleich (Gewicht 1)"]
+    assert p["weight"] == 1.0 and ev.net_ratio(base, run, 1.0) > 1 and "lohnt sich diese Bucket-Breite auf dieser Instanz nicht" in C.PRESET_HELP["Verwaltung gleich teuer wie ein Vergleich (Gewicht 1)"]
     # die letzte Instanz ist größer als die Voreinstellung
     big_base, _ = _live(C.PRESETS["Gruppierte Kunden, Kapazität 120, Breite 100"])
     default_base, _ = _live(C.PRESETS[DEFAULT])
@@ -94,7 +94,7 @@ def test_the_help_texts_state_what_the_scenarios_show():
 
 
 def test_hand_step_of_each_preset_shows_a_saving_where_the_help_text_says_so():
-    """Das gezeigte neue Label spart in jedem Szenario mit Eimern im Handbeispiel Vergleiche (Label 32 bzw. 34)."""
+    """Das gezeigte neue Label spart in jedem Szenario mit Buckets im Handbeispiel Vergleiche (Label 32 bzw. 34)."""
     for name, p in C.PRESETS.items():
         rows = ev.hand_step_rows(p["hand_wt"], p["hand_wq"])
         row = rows[p["step"] - 1]

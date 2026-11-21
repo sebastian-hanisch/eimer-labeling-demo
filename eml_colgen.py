@@ -1,7 +1,7 @@
-"""Spaltengenerierung mit Überdeckungs-Master: liefert die Dualpreise, mit denen die Eimer-Experimente das Preisproblem lösen.
+"""Spaltengenerierung mit Überdeckungs-Master: liefert die Dualpreise, mit denen die Buckets-Experimente das Preisproblem lösen.
 
 Master: kleinste Kosten, jeder Kunde mindestens einmal überdeckt (Überdeckung, >= 1), Spalten = Routen. Start: eine Einzelfahrt je Kunde. In jeder Runde löst HiGHS (scipy) den Master;
-die Dualpreise sind die Schattenpreise der Überdeckungsbedingungen. Das Preisproblem (`eml_algorithm.price`, ohne Eimer, Gedächtnis k) liefert bis zu 15 neue Routen mit negativen
+die Dualpreise sind die Schattenpreise der Überdeckungsbedingungen. Das Preisproblem (`eml_algorithm.price`, ohne Buckets, Gedächtnis k) liefert bis zu 15 neue Routen mit negativen
 reduzierten Kosten; findet es keine neue, endet die Spaltengenerierung. Die Dualpreise einzelner Runden und die der letzten Runde („Ende“) werden zurückgegeben."""
 
 import numpy as np

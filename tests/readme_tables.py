@@ -8,7 +8,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import eml_constants as C  # noqa: E402
 import eml_evaluation as ev  # noqa: E402
 
-BAND_HEADER = ("| Einstellung | Läufe | Median | Mittel | Maximum | Median cmp1 | Median cmp2 | Median Eimerschritte | Median Aufwand (Gewicht 0,1) |\n"
+BAND_HEADER = ("| Einstellung | Läufe | Median | Mittel | Maximum | Median cmp1 | Median cmp2 | Median Bucket-Schritte | Median Aufwand (Gewicht 0,1) |\n"
                "|---|---|---|---|---|---|---|---|---|")
 
 
@@ -25,7 +25,7 @@ def class_rows(bands) -> list:
     return rows
 
 
-CLASS_HEADER = ("| Labels ohne Eimer | Läufe | Vergleiche je Label ohne Eimer (Median) | Zeit 10 | Zeit 1 | Last 5 | Zeit 10 × Last 5 |\n|---|---|---|---|---|---|---|")
+CLASS_HEADER = ("| Labels ohne Buckets | Läufe | Vergleiche je Label ohne Buckets (Median) | Zeit 10 | Zeit 1 | Last 5 | Zeit 10 × Last 5 |\n|---|---|---|---|---|---|---|")
 
 
 def optimum_rows(bands) -> list:
@@ -35,11 +35,11 @@ def optimum_rows(bands) -> list:
             o = ev.optimum_counts(bands, q, g)
             best = max(o["counts"], key=lambda c: (o["counts"][c], -ev.ZEIT_CFGS.index(c)))
             none = o["counts"][(0, 0)]
-            rows.append(f"| {q} | {ev.fmt_dec(g, 1)} | {ev.config_name(*best)}: {o['counts'][best]} von {o['n']} | ohne Eimer: {none} von {o['n']} |")
+            rows.append(f"| {q} | {ev.fmt_dec(g, 1)} | {ev.config_name(*best)}: {o['counts'][best]} von {o['n']} | ohne Buckets: {none} von {o['n']} |")
     return rows
 
 
-OPTIMUM_HEADER = "| Kapazität | Gewicht je Eimerschritt | am häufigsten die beste Wahl | ohne Eimer die beste Wahl |\n|---|---|---|---|"
+OPTIMUM_HEADER = "| Kapazität | Gewicht je Bucket-Schritt | am häufigsten die beste Wahl | ohne Buckets die beste Wahl |\n|---|---|---|---|"
 
 if __name__ == "__main__":
     b = ev.load_bands()

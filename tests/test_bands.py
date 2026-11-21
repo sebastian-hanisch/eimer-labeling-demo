@@ -53,7 +53,7 @@ def test_every_setting_has_the_result_of_the_run_without_buckets():
     for x in BANDS:
         base = x["einstellungen"][(0, 0)]
         assert all(v[0] == base[0] and v[1] == base[1] for v in x["einstellungen"].values())          # gleiche Zahl erzeugter und gestrichener Labels
-        assert all(v[3] <= base[3] for v in x["einstellungen"].values())                              # cmp2 nie mehr als ohne Eimer
+        assert all(v[3] <= base[3] for v in x["einstellungen"].values())                              # cmp2 nie mehr als ohne Buckets
 
 
 def test_a_sample_of_runs_recomputes_to_the_stored_counters():
