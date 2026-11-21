@@ -1,4 +1,4 @@
-"""Kern: Label-Verfahren für den Weg mit den kleinsten reduzierten Kosten (Preisproblem der Spaltenerzeugung), Dominanzprüfung wahlweise mit Eimern je Knoten.
+"""Kern: Label-Verfahren für den Weg mit den kleinsten reduzierten Kosten (Preisproblem der Spaltengenerierung), Dominanzprüfung wahlweise mit Eimern je Knoten.
 
 Ein Label ist ein Teilweg: (Zeit, Kosten, Last, Gedächtnis, Knoten). Das Verfahren verlängert Labels in Zeitreihenfolge und streicht dominierte Labels
 (Kosten, Zeit, Last und Gedächtnis des anderen Labels sind alle höchstens so groß, das Gedächtnis als Teilmenge). **Eimer** ordnen die lebenden Labels eines Knotens nach

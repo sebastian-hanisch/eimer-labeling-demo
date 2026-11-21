@@ -1,5 +1,5 @@
 {
-"hinweis": "Dualpreise der Spaltenerzeugung (Überdeckungs-Master) je Instanz (Typ|Breite|Zufalls-Seed|Kapazität): Runden 1, 3, 8 und Ende; Index 0 ist das Depot.",
+"hinweis": "Dualpreise der Spaltengenerierung (Überdeckungs-Master) je Instanz (Typ|Breite|Zufalls-Seed|Kapazität): Runden 1, 3, 8 und Ende; Index 0 ist das Depot.",
 "instanzen": {
 "cluster|40|0|70": {
 "quelle": "tools/bands_bauen.py messen (Kern der Demo, eml_colgen.py, Überdeckungs-Master, k = 5), Lauf vom 2026-11-11",

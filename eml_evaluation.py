@@ -55,7 +55,7 @@ def route_text(route) -> str:
 
 @dataclass(frozen=True)
 class Settings:
-    """Die Live-Instanz: Größe, Fensterbreite, Typ ('zufall' oder 'cluster'), Kapazität, Zufalls-Seed (Gedächtnis immer k = 5, Dualpreise am Ende der Spaltenerzeugung)."""
+    """Die Live-Instanz: Größe, Fensterbreite, Typ ('zufall' oder 'cluster'), Kapazität, Zufalls-Seed (Gedächtnis immer k = 5, Dualpreise am Ende der Spaltengenerierung)."""
 
     n: int
     width: int
@@ -92,7 +92,7 @@ def instance_of(s: Settings) -> Instance:
 
 
 def live_duals(s: Settings) -> dict:
-    """Spaltenerzeugung der Live-Instanz (Überdeckungs-Master, k = 5): Dualpreise der letzten Runde, Runden, Schranke; bei Abbruch am Labelbudget ende = None."""
+    """Spaltengenerierung der Live-Instanz (Überdeckungs-Master, k = 5): Dualpreise der letzten Runde, Runden, Schranke; bei Abbruch am Labelbudget ende = None."""
     return G.colgen_duals(instance_of(s), C.MEMORY_K, rounds=(), max_labels_per_call=C.MAX_LABELS_CALL, max_labels_total=C.MAX_LABELS_COLGEN)
 
 

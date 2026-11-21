@@ -69,7 +69,7 @@ def test_a_sample_of_runs_recomputes_to_the_stored_counters():
 
 @pytest.mark.parametrize("seed", [0, 1, 2])
 def test_the_column_generation_reproduces_the_stored_bound(seed):
-    """Die Schranke der Spaltenerzeugung ist eindeutig (die Dualpreise bei Entartung nicht): sie muss mit der gespeicherten übereinstimmen."""
+    """Die Schranke der Spaltengenerierung ist eindeutig (die Dualpreise bei Entartung nicht): sie muss mit der gespeicherten übereinstimmen."""
     inst = make_instance(30, seed, 40, capacity=70)
     cg = G.colgen_duals(inst, 5, rounds=())
     stored = DUALS[f"zufall|40|{seed}|70"]

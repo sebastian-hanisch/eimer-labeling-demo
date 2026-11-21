@@ -1,8 +1,8 @@
-"""Spaltenerzeugung mit Überdeckungs-Master: liefert die Dualpreise, mit denen die Eimer-Experimente das Preisproblem lösen.
+"""Spaltengenerierung mit Überdeckungs-Master: liefert die Dualpreise, mit denen die Eimer-Experimente das Preisproblem lösen.
 
 Master: kleinste Kosten, jeder Kunde mindestens einmal überdeckt (Überdeckung, >= 1), Spalten = Routen. Start: eine Einzelfahrt je Kunde. In jeder Runde löst HiGHS (scipy) den Master;
 die Dualpreise sind die Schattenpreise der Überdeckungsbedingungen. Das Preisproblem (`eml_algorithm.price`, ohne Eimer, Gedächtnis k) liefert bis zu 15 neue Routen mit negativen
-reduzierten Kosten; findet es keine neue, endet die Spaltenerzeugung. Die Dualpreise einzelner Runden und die der letzten Runde („Ende“) werden zurückgegeben."""
+reduzierten Kosten; findet es keine neue, endet die Spaltengenerierung. Die Dualpreise einzelner Runden und die der letzten Runde („Ende“) werden zurückgegeben."""
 
 import numpy as np
 from scipy.optimize import linprog
@@ -30,7 +30,7 @@ def master_duals(inst: Instance, columns) -> tuple:
 
 
 def colgen_duals(inst: Instance, k: int, rounds=(1, 3, 8), max_iter: int = 200, max_labels_per_call=None, max_labels_total=None) -> dict:
-    """Spaltenerzeugung. Rückgabe: dict(duals={Runde: Dualpreise}, ende=Dualpreise der letzten Runde, iters, bound=Zielwert der letzten Runde, aborted, labels).
+    """Spaltengenerierung. Rückgabe: dict(duals={Runde: Dualpreise}, ende=Dualpreise der letzten Runde, iters, bound=Zielwert der letzten Runde, aborted, labels).
 
     `max_labels_per_call`: Labelbudget je Preisproblem, `max_labels_total`: Labelbudget über alle Runden zusammen (None = unbegrenzt); bei Überschreitung ist aborted True und `ende` None.
     `labels` ist die Zahl der erzeugten Labels über alle Runden."""

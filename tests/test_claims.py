@@ -206,7 +206,7 @@ def test_scenario_numbers_of_the_readme():
 
 def test_budget_numbers_of_the_readme():
     assert (C.MAX_LABELS_COLGEN, C.MAX_LABELS_CALL, C.MAX_LABELS) == (400_000, 150_000, 60_000)
-    assert "mehr als 400 000 erzeugten Labels in der Spaltenerzeugung oder mehr als 150 000 in einer Runde, bei mehr als 60 000 Labels im Lauf mit den gewählten Eimern" in README
+    assert "mehr als 400 000 erzeugten Labels in der Spaltengenerierung oder mehr als 150 000 in einer Runde, bei mehr als 60 000 Labels im Lauf mit den gewählten Eimern" in README
 
 
 def test_linked_demos_of_the_readme_exist_in_the_portfolio():

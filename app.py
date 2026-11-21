@@ -1,7 +1,7 @@
 """Eimer im Labeling: wie viele Dominanzvergleiche spart es, die Labels eines Knotens nach Zeit und Last in Eimer zu sortieren? - interaktive Konzept-Demo
 Sebastian Hanisch - Operations Research und Machine Learning
 
-Label-Verfahren für das Preisproblem der Spaltenerzeugung mit Eimern je Knoten („Bucket-Graph light“): Handbeispiel Schritt für Schritt, Live-Rechnung auf einer Zufallsinstanz mit
+Label-Verfahren für das Preisproblem der Spaltengenerierung mit Eimern je Knoten („Bucket-Graph light“): Handbeispiel Schritt für Schritt, Live-Rechnung auf einer Zufallsinstanz mit
 30 Kunden, Eimerbreite und Verwaltungsgewicht, Aufteilung der Vergleiche und die 320 festen Läufe der Messreihe. Der echte Bucket-Graph ist nicht Teil der Demo.
 
 Lauffähig mit: streamlit run app.py
@@ -90,7 +90,7 @@ with st.container(key="kopf"):
     st.title("🪣 Eimer im Labeling: wie viel sparen sie wirklich?")
 st.markdown(
     """
-Beim **Preisproblem der Spaltenerzeugung** wird ein Weg mit negativen **reduzierten Kosten** gesucht (Weglänge minus die **Dualpreise** der besuchten Kunden; der Dualpreis ist der Betrag, den die übergeordnete Planung
+Beim **Preisproblem der Spaltengenerierung** wird ein Weg mit negativen **reduzierten Kosten** gesucht (Weglänge minus die **Dualpreise** der besuchten Kunden; der Dualpreis ist der Betrag, den die übergeordnete Planung
 einem Kunden zurechnet). Das **Label-Verfahren** verlängert Teilwege (**Labels**) und streicht dominierte; jedes neue Label wird dafür mit den lebenden Labels seines Kunden verglichen. Diese Demo fragt:
 **Spart es Vergleiche, die Labels eines Kunden nach Zeit und Last in Fächer, sogenannte Eimer (englisch Buckets), zu sortieren, und was kostet die Verwaltung der Eimer?** Gemessen werden **Dominanzvergleiche** und
 **angesehene Eimer** (keine Sekunden): am Handbeispiel Schritt für Schritt, auf einer Zufallsinstanz mit bis zu 30 Kunden und in 320 festen Läufen.
@@ -156,20 +156,20 @@ instance_text = f"{n} Kunden, {TYP_NAMES[typ]}, Fensterbreite {width}, Kapazitä
 # --- Ergebnis: Zufallsinstanz ---------------------------------------------------------------------------------------------------------------
 
 st.markdown("## 🎯 Ergebnis: Eimer auf einer Zufallsinstanz")
-with st.spinner("Spaltenerzeugung und Label-Verfahren rechnen …"):
+with st.spinner("Spaltengenerierung und Label-Verfahren rechnen …"):
     duals = _duals(*inst_args)
     ok = duals["ende"] is not None
     if ok:
         base = _run(*inst_args, 0, 0)
         run = _run(*inst_args, int(wt), int(wq))
 if not ok:
-    st.warning(f"Die Spaltenerzeugung dieser Instanz ({instance_text}) ist abgebrochen: Sie hätte mehr als {ev.fmt_int(C.MAX_LABELS_COLGEN)} Labels über alle Runden (oder mehr als {ev.fmt_int(C.MAX_LABELS_CALL)} in einer Runde) erzeugt, das Rechenbudget der Live-Rechnung. Eine kleinere Instanz, schmalere Fenster oder die Kapazität 70 wählen; die festen Messreihen (Experiment 5) und das Handbeispiel (Experiment 1) bleiben davon unberührt.")
+    st.warning(f"Die Spaltengenerierung dieser Instanz ({instance_text}) ist abgebrochen: Sie hätte mehr als {ev.fmt_int(C.MAX_LABELS_COLGEN)} Labels über alle Runden (oder mehr als {ev.fmt_int(C.MAX_LABELS_CALL)} in einer Runde) erzeugt, das Rechenbudget der Live-Rechnung. Eine kleinere Instanz, schmalere Fenster oder die Kapazität 70 wählen; die festen Messreihen (Experiment 5) und das Handbeispiel (Experiment 1) bleiben davon unberührt.")
 if ok:
     st.markdown(
-        f"Instanz: **{instance_text}**. Die **Dualpreise** stammen aus einer Spaltenerzeugung mit Überdeckungs-Master ({duals['iters']} Runden; es wird mit den Dualpreisen der letzten Runde gerechnet), das Gedächtnis ist k = {C.MEMORY_K} "
+        f"Instanz: **{instance_text}**. Die **Dualpreise** stammen aus einer Spaltengenerierung mit Überdeckungs-Master ({duals['iters']} Runden; es wird mit den Dualpreisen der letzten Runde gerechnet), das Gedächtnis ist k = {C.MEMORY_K} "
         f"(die {C.MEMORY_K} nächsten Kunden). Das Label-Verfahren erzeugt **{ev.fmt_int(base.generated)} Labels**, davon werden {ev.fmt_int(base.dominated)} gestrichen; am Ende leben {ev.fmt_int(base.live)}. "
         f"Es gibt {ev.fmt_int(base.n_routes)} Routen mit negativen reduzierten Kosten" + (f", die beste hat {ev.fmt_dec(base.best_rc, 2)}." if base.best_rc is not None
-                                                                                       else " (mit den Dualpreisen der letzten Runde zu erwarten: Die Spaltenerzeugung endet, wenn das Preisproblem keine neue Route mehr findet). Das Verfahren muss dafür trotzdem alle Labels erzeugen und prüfen.")
+                                                                                       else " (mit den Dualpreisen der letzten Runde zu erwarten: Die Spaltengenerierung endet, wenn das Preisproblem keine neue Route mehr findet). Das Verfahren muss dafür trotzdem alle Labels erzeugen und prüfen.")
     )
     m1, m2, m3, m4 = st.columns(4)
     m1.metric("Vergleiche ohne Eimer", ev.fmt_int(base.comparisons), help=f"cmp1 {ev.fmt_int(base.cmp1)} + cmp2 {ev.fmt_int(base.cmp2)}.")
@@ -370,7 +370,7 @@ if ok:
         kind, text = ev.verdict_optimum(series)
         getattr(st, kind)(text)
         bands = _bands()
-        st.markdown("**Und in den 320 festen Läufen?** Wie oft hat welche Zeit-Breite den kleinsten Aufwand (je Kapazität 160 Läufe: 2 Verteilungen × 2 Fensterbreiten × 10 Zufalls-Seeds × 4 Runden der Spaltenerzeugung)?")
+        st.markdown("**Und in den 320 festen Läufen?** Wie oft hat welche Zeit-Breite den kleinsten Aufwand (je Kapazität 160 Läufe: 2 Verteilungen × 2 Fensterbreiten × 10 Zufalls-Seeds × 4 Runden der Spaltengenerierung)?")
         cq1, cq2 = st.columns(2)
         for col, qq in ((cq1, 70), (cq2, 120)):
             with col:
@@ -418,7 +418,7 @@ bands = _bands()
 st.subheader("🔬 Experiment 5: Die festen Messreihen (320 Läufe)")
 st.caption(
     "Fest gemessen, mit dem Kern dieser Demo neu gerechnet (nicht aus einer Messdatei übernommen): **30 Kunden**, Fensterbreite 40 und 100, zufällig verteilt und gruppiert, Kapazität 70 und 120, je 10 Zufalls-Seeds (0 bis 9), Gedächtnis k = 5, "
-    "Dualpreise der Spaltenerzeugung in den Runden 1, 3, 8 und am Ende. **Kapazität 70 und 120 benutzen dieselben Zufalls-Seeds und sind daher nicht unabhängig.** Je Zelle (Kapazität, Runde) stehen 40 Läufe; in jedem hat jede der 14 Einstellungen dasselbe Ergebnis wie ohne Eimer."
+    "Dualpreise der Spaltengenerierung in den Runden 1, 3, 8 und am Ende. **Kapazität 70 und 120 benutzen dieselben Zufalls-Seeds und sind daher nicht unabhängig.** Je Zelle (Kapazität, Runde) stehen 40 Läufe; in jedem hat jede der 14 Einstellungen dasselbe Ergebnis wie ohne Eimer."
 )
 b1, b2 = st.columns(2)
 bq = b1.radio("Kapazität", C.Q_OPTIONS, key="band_q", horizontal=True)

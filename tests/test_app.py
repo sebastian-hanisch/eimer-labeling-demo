@@ -90,11 +90,11 @@ def test_corner_matrix_at_the_widget_edges(n, width, typ, q, seed):
 
 
 def test_worst_case_at_the_widget_maximum_stays_inside_the_budget():
-    """Worst-Case (DEMO-PLAYBOOK §1c): n = 30, Fensterbreite 100, gruppiert, Kapazität 120, Zufalls-Seed 0 würde über 400 000 Labels in der Spaltenerzeugung erzeugen. Die App bricht ab,
+    """Worst-Case (DEMO-PLAYBOOK §1c): n = 30, Fensterbreite 100, gruppiert, Kapazität 120, Zufalls-Seed 0 würde über 400 000 Labels in der Spaltengenerierung erzeugen. Die App bricht ab,
     zeigt den Abbruch als Warnung statt als Fehler, und die festen Messreihen und das Handbeispiel erscheinen trotzdem."""
     at = _fresh_app({"n": "30", "breite": "100", "typ": "cluster", "q": "120", "seed": "0"})
     warnings = _texts(at, "warning")
-    assert any("Die Spaltenerzeugung dieser Instanz" in w and "abgebrochen" in w for w in warnings)
+    assert any("Die Spaltengenerierung dieser Instanz" in w and "abgebrochen" in w for w in warnings)
     subheaders = [s.value for s in at.subheader]
     assert any(s.startswith("🔬 Experiment 1:") for s in subheaders) and any(s.startswith("🔬 Experiment 5:") for s in subheaders)
     assert not any(s.startswith("🔬 Experiment 2:") for s in subheaders)

@@ -2,10 +2,10 @@
 
 Zwei Schritte (im Ordner der Demo, Python des Test-venv):
 
-1. Messen (neu gerechnet mit dem Kern der Demo: Spaltenerzeugung `eml_colgen.py` für die Dualpreise, danach `eml_algorithm.price` mit den 14 Eimer-Einstellungen):
+1. Messen (neu gerechnet mit dem Kern der Demo: Spaltengenerierung `eml_colgen.py` für die Dualpreise, danach `eml_algorithm.price` mit den 14 Eimer-Einstellungen):
        python tools/bands_bauen.py messen --typ zufall --Q 70 --out roh_zufall_70.jsonl
    (je Instanz-Typ und Kapazität ein Aufruf; vier Aufrufe können parallel laufen). Je Instanz (n = 30, Fensterbreite 40 und 100, Zufalls-Seeds 0 bis 9, Gedächtnis k = 5) rechnet er die
-   Spaltenerzeugung mit Überdeckungs-Master, nimmt die Dualpreise der Runden 1, 3, 8 und am Ende und löst das Preisproblem je Einstellung. Eine Zeile je Instanz.
+   Spaltengenerierung mit Überdeckungs-Master, nimmt die Dualpreise der Runden 1, 3, 8 und am Ende und löst das Preisproblem je Einstellung. Eine Zeile je Instanz.
 2. Bauen (liest die Rohzeilen und die Rohausgaben der Vormessung):
        python tools/bands_bauen.py bauen roh_*.jsonl --vormessung <Ordner label-setting-planung/vormessung>
    schreibt data/laeufe_v10.json (alle neu gerechneten Läufe), data/dualpreise_v10.json (die Dualpreise, mit denen gerechnet wurde) und data/vormessung_abgleich.json
@@ -115,7 +115,7 @@ def bauen(args) -> None:
                    "Vergleiche cmp2, Eimerschritte, Ergebnis gleich dem Lauf ohne Eimer, Sekunden (nur Information, parallele Läufe)]. n = 30, Gedächtnis k = 5.",
         "laeufe": laeufe}, ensure_ascii=False, indent=0), encoding="utf-8")
     (DATA / "dualpreise_v10.json").write_text(json.dumps({
-        "hinweis": "Dualpreise der Spaltenerzeugung (Überdeckungs-Master) je Instanz (Typ|Breite|Zufalls-Seed|Kapazität): Runden 1, 3, 8 und Ende; Index 0 ist das Depot.",
+        "hinweis": "Dualpreise der Spaltengenerierung (Überdeckungs-Master) je Instanz (Typ|Breite|Zufalls-Seed|Kapazität): Runden 1, 3, 8 und Ende; Index 0 ist das Depot.",
         "instanzen": duals}, ensure_ascii=False, indent=0), encoding="utf-8")
     (DATA / "vormessung_abgleich.json").write_text(json.dumps({
         "hinweis": "Abgleich der neu gerechneten Läufe mit den Rohausgaben der Vormessung (out_v10_mess_*.txt) beim Bau der Daten; nicht Teil der Testsuite.",

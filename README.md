@@ -2,8 +2,8 @@
 
 **[→ Demo live ausprobieren](https://sebastianhanisch-eimer-labeling-demo.streamlit.app/)**
 
-Demo der Linie „Ressourcenwege und Spaltenerzeugung“ in der „Konzepte“-Reihe für die Website „Sebastian Hanisch – Operations Research und Machine Learning“. Das **Label-Verfahren** sucht den Weg mit den kleinsten **reduzierten Kosten**
-(Weglänge minus die Dualpreise der besuchten Kunden), mit Zeitfenstern und Last; es ist das Preisproblem der Spaltenerzeugung. Jeder Teilweg ist ein **Label**, und jedes neue Label wird gegen die lebenden Labels seines Kunden auf **Dominanz** geprüft.
+Demo der Linie „Ressourcenwege und Spaltengenerierung“ in der „Konzepte“-Reihe für die Website „Sebastian Hanisch – Operations Research und Machine Learning“. Das **Label-Verfahren** sucht den Weg mit den kleinsten **reduzierten Kosten**
+(Weglänge minus die Dualpreise der besuchten Kunden), mit Zeitfenstern und Last; es ist das Preisproblem der Spaltengenerierung. Jeder Teilweg ist ein **Label**, und jedes neue Label wird gegen die lebenden Labels seines Kunden auf **Dominanz** geprüft.
 Diese Demo fragt nur eines: **Spart es Vergleiche, die lebenden Labels eines Kunden nach Zeit und Last in Fächer, sogenannte Eimer (englisch Buckets), zu sortieren, und was kostet die Verwaltung der Eimer?** Gezählt werden Dominanzvergleiche und angesehene Eimer, keine Sekunden.
 **Der echte Bucket-Graph der Literatur (Eimer als Knoten mit Sprungkanten, ganze Eimer werden auf einmal verlängert) ist nicht gebaut und nicht gemessen;** die Demo misst nur die einfache Ablage der Eimer je Kunde („Bucket-Graph light“).
 
@@ -22,7 +22,7 @@ an einer Zufallsinstanz mit bis zu 30 Kunden und in 320 festen Läufen, und sie 
 
 ## Befunde und Korrekturen gegenüber dem Plan
 
-- **Neu gerechnet statt übernommen:** Die 320 Läufe der Messreihe sind mit dem Kern dieser Demo neu gerechnet (`tools/bands_bauen.py`), einschließlich der Spaltenerzeugung, aus der die Dualpreise stammen. Beim Bau wurde jede der 4 480 Zeilen (320 Läufe × 14 Einstellungen) mit der Rohausgabe der früheren, nicht veröffentlichten Messung
+- **Neu gerechnet statt übernommen:** Die 320 Läufe der Messreihe sind mit dem Kern dieser Demo neu gerechnet (`tools/bands_bauen.py`), einschließlich der Spaltengenerierung, aus der die Dualpreise stammen. Beim Bau wurde jede der 4 480 Zeilen (320 Läufe × 14 Einstellungen) mit der Rohausgabe der früheren, nicht veröffentlichten Messung
   verglichen: Labels, gestrichene Labels, beide Vergleichszahlen und Eimerschritte stimmen in 4 480 von 4 480 Zeilen überein, ebenso die 320 Dualpreis-Sätze (größte Abweichung 0,0). Dieser Abgleich ist nicht Teil der Testsuite (die Rohausgaben sind nicht veröffentlicht); `data/vormessung_abgleich.json` hält sein Ergebnis fest, und ein Test prüft,
   dass die Datei es nennt. In der Testsuite wird eine Stichprobe der Läufe mit den gespeicherten Dualpreisen neu gerechnet.
 - **Korrektur: Eimer sparen nicht in jedem Lauf Vergleiche.** Die Prüfung „dominiert das neue Label alte?“ (cmp2) sieht mit Eimern nie mehr Labels an als ohne (in allen 4 160 Zeilen mit Eimern gilt cmp2 mit Eimern ≤ cmp2 ohne Eimer). Die Prüfung „wird das neue Label dominiert?“ (cmp1) bricht beim ersten dominierenden Label ab; mit Eimern
@@ -42,7 +42,7 @@ Zeit-Index und Last-Index höchstens denen des neuen Labels: nur diese Eimer sie
 (die Rechnung springt über leere Eimer; ihre Sekunden sind daher kein Maß). **Aufwand** = cmp1 + cmp2 + Gewicht × Eimerschritte. Die Formeln stehen im Expander **📐 Mathematische Formulierung** der App (`app.py`), mit Lesehilfe.
 
 Zwei Arten von Instanzen: das **Handbeispiel** (6 Kunden, Manhattan-Abstand, alle Zahlen ganz, halbzahlige Dualpreise, Bedienzeit 2, Horizont 40, Kapazität 9) und **Zufallsinstanzen im Stil der Solomon-Instanzen** (Quadrat 100 × 100, Fahrzeit gleich Entfernung, Bedienzeit 10, Horizont 300, Kapazität 70 oder 120,
-Fensterbreite 40 oder 100, Kunden zufällig verteilt oder in fünf Gruppen; **nicht die Originalinstanzen**). Die Dualpreise der Zufallsinstanzen stammen aus einer Spaltenerzeugung mit Überdeckungs-Master (Runden 1, 3, 8 und Ende in den festen Läufen, nur Ende in der Live-Rechnung).
+Fensterbreite 40 oder 100, Kunden zufällig verteilt oder in fünf Gruppen; **nicht die Originalinstanzen**). Die Dualpreise der Zufallsinstanzen stammen aus einer Spaltengenerierung mit Überdeckungs-Master (Runden 1, 3, 8 und Ende in den festen Läufen, nur Ende in der Live-Rechnung).
 
 ## Methodik
 
@@ -52,7 +52,7 @@ und zwei Last-Eimerbreiten; (3) das Optimum: Aufwand je Zeit-Breite bei Gewicht 
 
 ## Befunde (gemessen, keine Behauptungen)
 
-Alle Zahlen sind Zählungen (Vergleiche, Eimerschritte, Labels) in Python an den genannten Instanzen und Dualpreisen; Zeiten sind nie ein Befund. Die feste Messreihe: 30 Kunden, Gedächtnis k = 5, Fensterbreite 40 und 100, Kunden zufällig verteilt und gruppiert, Kapazität 70 und 120, je 10 Zufalls-Seeds (0 bis 9), Dualpreise der Spaltenerzeugung
+Alle Zahlen sind Zählungen (Vergleiche, Eimerschritte, Labels) in Python an den genannten Instanzen und Dualpreisen; Zeiten sind nie ein Befund. Die feste Messreihe: 30 Kunden, Gedächtnis k = 5, Fensterbreite 40 und 100, Kunden zufällig verteilt und gruppiert, Kapazität 70 und 120, je 10 Zufalls-Seeds (0 bis 9), Dualpreise der Spaltengenerierung
 in den Runden 1, 3, 8 und am Ende: 320 Läufe (Instanz × Kapazität × Runde), je 14 Eimer-Einstellungen, 4 480 Zeilen, alle vollständig gerechnet (die Läufe der Messreihe haben kein Labelbudget); **Kapazität 70 und 120 benutzen dieselben Zufalls-Seeds und sind daher nicht unabhängig.** Ohne Eimer erzeugt das Verfahren im Median 5 141,5 Labels je Lauf (höchstens 293 469) und streicht davon im Median 85,1 %.
 „Verhältnis“ heißt Vergleiche mit Eimern geteilt durch Vergleiche ohne Eimer, im selben Lauf. Die Spalte „Test“ nennt die Prüfung in `tests/test_claims.py` bzw. `tests/test_algorithm.py` (Zahl-zu-Test-Tabelle).
 
@@ -144,7 +144,7 @@ Median der Vergleiche ohne Eimer in dieser Zelle: 42 690,5 (ganzzahlig gerundet 
 - Das Gewicht je Eimerschritt ist angenommen. Bei Gewicht 1 ist „ohne Eimer“ in 88 % (Kapazität 70) und 79 % (Kapazität 120) der Läufe die beste Wahl, bei Gewicht 0 nie; ein Optimum der Eimerbreite gibt es nur unter dem angenommenen Gewicht.
 - Die feste Messreihe hat nur 30 Kunden, Kapazität 70 und 120, Gedächtnis k = 5 und eigene Instanzen (nicht die Solomon-Originale); 50 und 100 Kunden, andere Kapazitäten, ein anderes Gedächtnis und Eimer zusammen mit beidseitigem Labeling sind nicht gemessen. Kapazität 70 und 120 benutzen dieselben Zufalls-Seeds und sind nicht unabhängig.
 - Eimerschritte sind nach Formel gezählt (alle Indizes im durchsuchten Bereich, auch leere); die Rechnung selbst springt über leere Eimer, ihre Laufzeit ist daher kein Maß.
-- Die Live-Rechnung der App hat ein Rechenbudget (Abbruch bei mehr als 400 000 erzeugten Labels in der Spaltenerzeugung oder mehr als 150 000 in einer Runde, bei mehr als 60 000 Labels im Lauf mit den gewählten Eimern); darüber zeigt die App den Abbruch als Warnung. Die festen Messreihen und das Handbeispiel sind davon unberührt.
+- Die Live-Rechnung der App hat ein Rechenbudget (Abbruch bei mehr als 400 000 erzeugten Labels in der Spaltengenerierung oder mehr als 150 000 in einer Runde, bei mehr als 60 000 Labels im Lauf mit den gewählten Eimern); darüber zeigt die App den Abbruch als Warnung. Die festen Messreihen und das Handbeispiel sind davon unberührt.
 - Das Handbeispiel (6 Kunden) ist zum Nachrechnen gebaut: Seine Zahlen (zum Beispiel 16,7 % weniger Vergleiche mit Zeit-Eimer 10) sind ein einzelnes Beispiel und kein Beleg für die Größenordnung in den Messreihen.
 - Ursachen („weil …“) sind Deutungen, wo es dasteht; gemessen sind die Zählungen.
 - Literatur (Prüfstand: Sadykov, Uchoa, Pessoa 2021, Transportation Science, nur die Zusammenfassung gelesen; Pessoa, Sadykov, Uchoa, Vanderbeck 2020, Mathematical Programming, Volltext gelesen, aber hier nicht gemessen; Pecin, Pessoa, Poggi, Uchoa 2017, Mathematical Programming Computation, nur als Suchtreffer gesehen). Keine Zahl daraus übernommen.
@@ -153,7 +153,7 @@ Annahmen, Grenzen und bekannte Probleme, wie sie auch in der App stehen (ein Tes
 
 **Annahmen**
 - Eigene Instanzen im Stil der Solomon-Instanzen (Quadrat 100 × 100, Fahrzeit gleich Entfernung, Bedienzeit 10, Horizont 300, Kapazität 70 oder 120), **nicht die Originalinstanzen**; das Handbeispiel rechnet mit dem Manhattan-Abstand auf einem Gitter.
-- Die Dualpreise der Messreihen und der Live-Rechnung sind die der Spaltenerzeugung mit Überdeckungs-Master (Runden 1, 3, 8 und Ende bzw. nur Ende), Gedächtnis k = 5 (die fünf nächsten Kunden).
+- Die Dualpreise der Messreihen und der Live-Rechnung sind die der Spaltengenerierung mit Überdeckungs-Master (Runden 1, 3, 8 und Ende bzw. nur Ende), Gedächtnis k = 5 (die fünf nächsten Kunden).
 - Warten vor einem Zeitfenster ist erlaubt und kostenlos.
 - Gezählt werden Dominanzvergleiche und angesehene Eimer, nicht Sekunden. **Das Gewicht je Eimerschritt (Voreinstellung 0,1) ist eine Annahme, keine Messung.** Eimerschritte sind nach Formel gezählt (alle Eimerindizes im durchsuchten Bereich, auch leere); die Rechnung selbst springt über leere Eimer.
 
@@ -175,7 +175,7 @@ Annahmen, Grenzen und bekannte Probleme, wie sie auch in der App stehen (ein Tes
   die Aufzählung aller elementaren Routen bestätigt die gemeldeten Routen und die beste Route (Handbeispiel: 39 Routen). Beim Bau lief außerdem eine große Fassung außerhalb des Repos (Messung dieser README, nicht im Test): 300 Zufallsinstanzen mit 4 bis 9 Kunden, 14 Einstellungen, beide Eimerränder, 8 400 Vergleiche mit dem unabhängigen Rechenweg, 0 Abweichungen.
 - **Eigenschaften** (`tests/test_eigenschaften_eimer_labeling.py`): Eimer ändern nie das Ergebnis; cmp2 nie mehr als ohne Eimer; Eimerbreite über Horizont oder Kapazität gleich ohne Eimer; alle Zeiten verdoppelt, dieselben Zähler; Umnummerieren der Kunden; gleiche Zähler in einem zweiten Prozess mit anderem Hash-Zufall.
 - **Randfälle** (`tests/test_edge_cases.py`): Label genau auf der Eimergrenze, Breite 1, Breite gleich dem Horizont, Ankunft genau zur Zeit H, ein Label am Kunden, leerer Kunde, ein und zwei Kunden, Gleichstand, alle Dualpreise 0, Kapazität unter jeder Last, Gedächtnis 0.
-- **Messreihen** (`tests/test_bands.py`): Aufbau, Quelle je Lauf, eine Stichprobe von 8 Läufen mit den gespeicherten Dualpreisen neu gerechnet (alle 14 Einstellungen gleich), die Spaltenerzeugung reproduziert drei gespeicherte Schranken.
+- **Messreihen** (`tests/test_bands.py`): Aufbau, Quelle je Lauf, eine Stichprobe von 8 Läufen mit den gespeicherten Dualpreisen neu gerechnet (alle 14 Einstellungen gleich), die Spaltengenerierung reproduziert drei gespeicherte Schranken.
 - **Zahlen der README** (`tests/test_claims.py`): jede Tabelle der README entsteht zeichengleich aus den Daten; die Handbeispiel-Zahlen, Spannen, Aufteilungen und Häufigkeiten werden aus den Läufen berechnet.
 - **Verdikte** (`tests/test_verdicts.py`) und **je Schnellstart-Szenario die erwartete Verdikt-Zeile** (`tests/test_presets.py`, `tests/test_app.py`).
 - **Oberfläche:** AppTest-Rauchtest (jeder Knopf, jeder Regler am Minimum und Maximum, jede Option, Eckfälle, Worst-Case am Regler-Maximum, Permalink mit ungültigen Werten), Layout (fester Kopf, Schnellstart in der Seitenleiste, Hervorhebung), Footer, Laufzeit-Importe.
@@ -190,7 +190,7 @@ Annahmen, Grenzen und bekannte Probleme, wie sie auch in der App stehen (ein Tes
 | `.streamlit/config.toml` | Streamlit-Einstellungen (keine Nutzungsstatistik) |
 | `app.py` | Streamlit-App: Kopf, Ergebnis, Kernfrage, fünf Experimente, Grenzen, Formeln, Fußzeile |
 | `eml_algorithm.py` | Kern: Label-Verfahren mit Eimern je Kunde (Vergleiche und Eimerschritte gezählt), Dominanzregel, Routenprüfer |
-| `eml_colgen.py` | Spaltenerzeugung (scipy, Überdeckungs-Master) für die Dualpreise der Live-Instanz und der Messreihen |
+| `eml_colgen.py` | Spaltengenerierung (scipy, Überdeckungs-Master) für die Dualpreise der Live-Instanz und der Messreihen |
 | `eml_constants.py` | Regler-Grenzen, Rechenbudget, Farben, Schnellstart-Szenarien, gemeinsamer Text der Annahmen |
 | `eml_evaluation.py` | Live-Läufe, Handbeispiel-Auswertung, Auswertung der Messreihen, Zahlenformate, Verdikte (reine Funktionen) |
 | `eml_layout.py` | Fester Kopf (Stylesheet) |

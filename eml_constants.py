@@ -1,7 +1,7 @@
 """Konstanten: Regler-Grenzen, feste Annahmen, Farben, Schnellstart-Szenarien und Texte, die App und README gemeinsam haben."""
 
 # --- Regler ---------------------------------------------------------------------------------------------------------------------------------
-# Komplexität am Regler-Maximum (n = 30, Fensterbreite 100, Kapazität 120, gruppiert): Die Spaltenerzeugung erzeugt über alle Runden mehrere Hunderttausend Labels (bei vier gemessenen
+# Komplexität am Regler-Maximum (n = 30, Fensterbreite 100, Kapazität 120, gruppiert): Die Spaltengenerierung erzeugt über alle Runden mehrere Hunderttausend Labels (bei vier gemessenen
 # Zufalls-Seeds 0,47 bis 0,84 Millionen), und das Verfahren prüft je neues Label alle lebenden Labels des Kunden. MAX_LABELS_COLGEN, MAX_LABELS_CALL und MAX_LABELS fangen das ab: Die Rechnung bricht nach so vielen
 # erzeugten Labels ab (einige Sekunden in Python) und die App zeigt den Abbruch als Befund; die festen Messreihen (Experiment 5) bleiben davon unberührt.
 N_MIN, N_MAX, DEFAULT_N = 8, 30, 20
@@ -13,8 +13,8 @@ WT_OPTIONS, DEFAULT_WT = (0, 1, 2, 5, 10, 20, 40, 80), 10     # Zeit-Eimerbreite
 WQ_OPTIONS, DEFAULT_WQ = (0, 5, 10), 0                        # Last-Eimerbreite in Lasteinheiten; 0 = kein Last-Eimer
 WEIGHT_MIN, WEIGHT_MAX, DEFAULT_WEIGHT, WEIGHT_STEP = 0.0, 1.0, 0.1, 0.05   # Gewicht je Eimerschritt: eine ANNAHME, keine Messung
 MAX_LABELS = 60_000                                           # Abbruch eines Live-Laufs (und damit der Reihe der Experimente 2 bis 4) bei so vielen erzeugten Labels
-MAX_LABELS_CALL = 150_000                                     # Abbruch eines einzelnen Preisproblems in der Spaltenerzeugung der Live-Instanz
-MAX_LABELS_COLGEN = 400_000                                   # Abbruch der Spaltenerzeugung der Live-Instanz bei so vielen erzeugten Labels über alle Runden zusammen
+MAX_LABELS_CALL = 150_000                                     # Abbruch eines einzelnen Preisproblems in der Spaltengenerierung der Live-Instanz
+MAX_LABELS_COLGEN = 400_000                                   # Abbruch der Spaltengenerierung der Live-Instanz bei so vielen erzeugten Labels über alle Runden zusammen
 MEMORY_K = 5                                                  # Gedächtnis (ng-Nachbarschaft) aller Rechnungen mit Zufallsinstanzen
 HORIZON, SERVICE = 300, 10
 SWEEP_WT = (0, 80, 40, 20, 10, 5, 2, 1)                       # Zeit-Eimerbreiten in Experiment 2 und 3 (grob nach fein; 0 = ohne)
@@ -70,7 +70,7 @@ PRESET_HELP = {
 ASSUMPTIONS_MARKDOWN = """\
 **Annahmen**
 - Eigene Instanzen im Stil der Solomon-Instanzen (Quadrat 100 × 100, Fahrzeit gleich Entfernung, Bedienzeit 10, Horizont 300, Kapazität 70 oder 120), **nicht die Originalinstanzen**; das Handbeispiel rechnet mit dem Manhattan-Abstand auf einem Gitter.
-- Die Dualpreise der Messreihen und der Live-Rechnung sind die der Spaltenerzeugung mit Überdeckungs-Master (Runden 1, 3, 8 und Ende bzw. nur Ende), Gedächtnis k = 5 (die fünf nächsten Kunden).
+- Die Dualpreise der Messreihen und der Live-Rechnung sind die der Spaltengenerierung mit Überdeckungs-Master (Runden 1, 3, 8 und Ende bzw. nur Ende), Gedächtnis k = 5 (die fünf nächsten Kunden).
 - Warten vor einem Zeitfenster ist erlaubt und kostenlos.
 - Gezählt werden Dominanzvergleiche und angesehene Eimer, nicht Sekunden. **Das Gewicht je Eimerschritt (Voreinstellung 0,1) ist eine Annahme, keine Messung.** Eimerschritte sind nach Formel gezählt (alle Eimerindizes im durchsuchten Bereich, auch leere); die Rechnung selbst springt über leere Eimer.
 
